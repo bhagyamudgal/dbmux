@@ -61,6 +61,15 @@ To add support for a new database (e.g., MySQL), follow these steps:
     pnpm add mysql2
     ```
 
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js**: `v22.0.0` or higher
+- **pnpm**: `v10.0.0` or higher
+
+This project uses specific versions of Node.js and pnpm, which are defined in the `engines` field of the `package.json` file.
+
 ## Installation
 
 ### From npm (when published)
