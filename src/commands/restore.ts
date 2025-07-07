@@ -9,6 +9,7 @@ import {
     verifyDumpFile,
     type DumpFileInfo,
 } from "../utils/dump-restore.js";
+import { extractMessageFromError } from "../utils/general.js";
 import { logger } from "../utils/logger.js";
 
 export type RestoreOptions = {
@@ -226,7 +227,9 @@ export async function executeRestoreCommand(
             `Database '${targetDatabase}' has been restored from '${dumpFile}'`
         );
     } catch (error) {
-        logger.fail("Invalid operation. Check command usage.");
+        logger.fail(
+            `Restore failed: ${extractMessageFromError(error, "Unknown error")}`
+        );
         process.exit(1);
     }
 }

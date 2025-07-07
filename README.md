@@ -119,14 +119,14 @@ pnpm format:check
 
 ### Connect to a Database
 
-You can connect to any supported database by specifying the `--type`.
+You can connect to any supported database by specifying the flags, or run the command without flags for an interactive setup.
 
 ```bash
-# Connect to PostgreSQL (default)
-dbman connect -n my-postgres -u postgres -d myapp_production
+# Interactive mode
+dbman connect
 
-# Connect to SQLite
-dbman connect --type sqlite --file ./db.sqlite -n my-sqlite
+# Flag-based mode
+dbman connect --type postgresql -n my-postgres -u postgres -d myapp_production
 ```
 
 ### List Operations
@@ -199,12 +199,17 @@ dbman restore -f backup.dump --verbose
 
 ### Configuration Management
 
+Run commands with flags, or use the interactive prompts for adding and removing connections.
+
 ```bash
+# Add a new connection interactively
+dbman config add
+
+# Remove a connection interactively
+dbman config remove
+
 # List all saved connections
 dbman config list
-
-# Remove a connection
-dbman config remove -n old_connection
 
 # Set default connection
 dbman config default -n production
@@ -217,21 +222,22 @@ dbman config show
 
 ### `dbman connect [options]`
 
-Connect to a database and optionally save the connection.
+Connect to a database. If required flags (like `--user` or `--file`) are omitted, it starts an interactive setup.
 
-| Option       | Alias | Description                          | Default        | Required |
-| ------------ | ----- | ------------------------------------ | -------------- | -------- |
-| `--type`     |       | Database type (e.g., `postgresql`)   | `postgresql`   | No       |
-| `--name`     | `-n`  | Connection name for saving           | auto-generated | No       |
-| `--host`     | `-H`  | Database host (not for SQLite)       | `localhost`    | No       |
-| `--port`     | `-p`  | Database port (not for SQLite)       | `5432`         | No       |
-| `--user`     | `-u`  | Database username (not for SQLite)   | -              | **Yes**  |
-| `--password` | `-w`  | Database password                    | prompt         | No       |
-| `--database` | `-d`  | Database name (not for SQLite)       | -              | **Yes**  |
-| `--file`     |       | File path for SQLite connection      | -              | **Yes**  |
-| `--ssl`      |       | Use SSL connection (PostgreSQL only) | `false`        | No       |
-| `--save`     |       | Save connection configuration        | `true`         | No       |
-| `--test`     |       | Test connection without saving       | `false`        | No       |
+| Option       | Alias | Description                              | Default        | Required (non-interactive) |
+| ------------ | ----- | ---------------------------------------- | -------------- | -------------------------- |
+| `--type`     |       | Database type (e.g., `postgresql`)       | `postgresql`   | No                         |
+| `--name`     | `-n`  | Connection name for saving               | auto-generated | No                         |
+| `--host`     | `-H`  | Database host (not for SQLite)           | `localhost`    | No                         |
+| `--port`     | `-p`  | Database port (not for SQLite)           | `5432`         | No                         |
+| `--user`     | `-u`  | Database username (not for SQLite)       | -              | **Yes**                    |
+| `--password` | `-w`  | Database password                        | prompt         | No                         |
+| `--database` | `-d`  | Database name (not for SQLite)           | -              | **Yes**                    |
+| `--file`     |       | File path for SQLite connection          | -              | **Yes**                    |
+| `--ssl`      |       | Use SSL connection (PostgreSQL only)     | `false`        | No                         |
+| `--save`     |       | Save connection configuration            | `true`         | No                         |
+| `--test`     |       | Test connection without saving           | `false`        | No                         |
+| `--verbose`  |       | Enable verbose logging from `pg_restore` | `false`        | No                         |
 
 ### `dbman list [options]`
 
@@ -287,8 +293,9 @@ Restore a PostgreSQL database from a dump file. This command requires `pg_restor
 
 Manage configuration and connections.
 
+- `dbman config add` - Add a new connection interactively
 - `dbman config list` - List all saved connections
-- `dbman config remove -n <name>` - Remove a connection
+- `dbman config remove [name]` - Remove a connection (interactive if name is omitted)
 - `dbman config default -n <name>` - Set default connection
 - `dbman config show` - Show config file and settings
 

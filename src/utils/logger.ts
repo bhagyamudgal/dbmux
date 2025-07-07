@@ -18,7 +18,7 @@ export const logger = {
     error: (message: string) => {
         console.error(chalk.bold.red(`${LOG_PREFIX} ${message}`));
     },
-    raw: (...args: any[]) => {
+    raw: (...args: unknown[]) => {
         console.log(...args);
     },
 };

@@ -35,14 +35,15 @@ const connectCommand = command({
     desc: "Connect to a PostgreSQL database and save configuration",
     options: {
         name: string().alias("n"),
-        host: string().default("localhost").alias("H"),
-        port: number().min(1).max(65535).default(5432).alias("p"),
-        user: string().required().alias("u"),
+        host: string().alias("H"),
+        port: number().min(1).max(65535).alias("p"),
+        user: string().alias("u"),
         password: string().alias("w"),
-        database: string().required().alias("d"),
-        ssl: boolean().default(false),
+        database: string().alias("d"),
+        ssl: boolean(),
         save: boolean().default(true),
         test: boolean().default(false),
+        type: string().enum("postgresql", "sqlite"),
     },
     handler: executeConnectCommand,
 });
@@ -108,6 +109,12 @@ const configCommand = command({
     desc: "Manage configuration and saved connections",
     subcommands: [
         command({
+            name: "add",
+            desc: "Add a new connection interactively",
+            options: {},
+            handler: () => executeConfigCommand({ action: "add" }),
+        }),
+        command({
             name: "list",
             desc: "List all saved connections",
             options: {},
@@ -117,7 +124,7 @@ const configCommand = command({
             name: "remove",
             desc: "Remove a saved connection",
             options: {
-                name: string().required().alias("n"),
+                name: string().alias("n"),
             },
             handler: (options) =>
                 executeConfigCommand({ action: "remove", name: options.name }),

@@ -7,10 +7,11 @@ import {
     testConnection,
 } from "../utils/database.js";
 import { logger } from "../utils/logger.js";
+import { promptForConnectionDetails } from "../utils/prompt.js";
 
 export type ConnectOptions = {
     name?: string;
-    type?: string;
+    type?: DatabaseType;
     host?: string;
     port?: number;
     user?: string;
@@ -22,60 +23,65 @@ export type ConnectOptions = {
     test?: boolean;
 };
 
+function isInteractive(options: ConnectOptions): boolean {
+    if (options.type === "sqlite") {
+        return !options.file;
+    }
+    return !options.user || !options.database;
+}
+
 export async function executeConnectCommand(options: ConnectOptions) {
     logger.info("Attempting to connect to database...");
 
-    const type = (options.type || "postgresql") as DatabaseType;
+    let config: ConnectionConfig;
 
-    const config: ConnectionConfig = { type };
-
-    if (type === "sqlite") {
-        if (!options.file) {
-            logger.fail(
-                "File path is required for SQLite connections (--file)"
-            );
-            return;
-        }
-        config.filePath = options.file;
+    if (isInteractive(options)) {
+        logger.info(
+            "Required connection details not provided, starting interactive mode..."
+        );
+        config = await promptForConnectionDetails();
     } else {
-        const defaults = getDriverDefaults(type);
+        const type = options.type || "postgresql";
+        if (type === "sqlite") {
+            if (!options.file) {
+                logger.fail(
+                    "File path is required for SQLite connections (--file)"
+                );
+                return;
+            }
+            config = {
+                type,
+                filePath: options.file,
+            };
+        } else {
+            const defaults = getDriverDefaults(type);
+            config = {
+                type,
+                host: options.host ?? defaults.host ?? "localhost",
+                port: options.port ?? defaults.port ?? 5432,
+                ssl: options.ssl ?? defaults.ssl ?? false,
+            };
 
-        if (!options.user || !options.database) {
-            logger.fail(
-                "User and database are required for this connection type"
-            );
-            return;
-        }
+            if (options.user) config.user = options.user;
+            if (options.password) config.password = options.password;
+            if (options.database) config.database = options.database;
 
-        const host = options.host || defaults.host;
-        if (host) {
-            config.host = host;
+            if (!config.user || !config.database) {
+                logger.fail(
+                    "User and database are required for this connection type"
+                );
+                return;
+            }
         }
-
-        const port = options.port || defaults.port;
-        if (port) {
-            config.port = port;
-        }
-
-        config.user = options.user;
-        if (options.password) {
-            config.password = options.password;
-        }
-        config.database = options.database;
-        const ssl = options.ssl ?? defaults.ssl;
-        if (ssl !== undefined) {
-            config.ssl = ssl;
-        }
-    }
-
-    if (type !== "sqlite" && !options.user) {
-        logger.fail("Database user is required (-u, --user)");
-        return;
     }
 
     try {
         logger.info(
-            `Testing connection to ${config.type} at ${config.host}:${config.port}`
+            `Testing connection to ${config.type} at ${
+                config.type === "sqlite"
+                    ? config.filePath
+                    : `${config.host}:${config.port}`
+            }`
         );
         const isConnected = await testConnection(config);
 
@@ -98,7 +104,10 @@ export async function executeConnectCommand(options: ConnectOptions) {
         if (options.save !== false) {
             const connectionName =
                 options.name ||
-                `${config.user}@${config.host}:${config.port}/${config.database}`;
+                (config.type === "sqlite"
+                    ? `sqlite-${config.filePath?.split("/").pop()?.split(".")[0]}`
+                    : `${config.user}@${config.host}/${config.database}`);
+
             addConnection(connectionName, config);
             logger.success(`Connection saved as '${connectionName}'`);
         }
@@ -109,7 +118,7 @@ export async function executeConnectCommand(options: ConnectOptions) {
             logger.fail("An unknown error occurred during connection.");
         }
     } finally {
-        if (options.test) {
+        if (!options.test) {
             await closeConnection();
         }
     }
