@@ -1,6 +1,6 @@
 import chalk from "chalk";
 
-const LOG_PREFIX = "[dbman]";
+const LOG_PREFIX = "[dbmux]";
 
 export const logger = {
     info: (message: string) => {

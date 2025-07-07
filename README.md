@@ -1,4 +1,4 @@
-# DBMan - Database Management CLI
+# DBMux - Database Management CLI
 
 A flexible, modern database management CLI tool built with TypeScript. It supports multiple database systems through a driver-based architecture, with PostgreSQL as the primary implementation.
 
@@ -7,19 +7,19 @@ A flexible, modern database management CLI tool built with TypeScript. It suppor
 - 🔮 **Multi-Database Support**: Easily extendable to support MySQL, SQLite, and more.
 - 🔗 **Connection Management**: Save and reuse database connections for any supported DB.
 - 🛡️ **Type-safe CLI**: Built with [brocli](https://github.com/drizzle-team/brocli) for robust argument parsing and validation.
-- 🗃️ **Persistent Config**: Connections saved to `~/.dbman/config.json`.
+- 🗃️ **Persistent Config**: Connections saved to `~/.dbmux/config.json`.
 - 💾 **Database Backup & Restore**: Production-ready pg_dump and pg_restore (PostgreSQL only).
 - 🚀 **Modern Architecture**: ESM modules, strict TypeScript, and a clean, driver-based design.
 
 ## Architecture
 
-DBMan is built on a driver-based architecture that makes it easy to extend and support multiple database systems. The core logic is decoupled from any specific database implementation, allowing for a flexible and scalable design.
+DBMux is built on a driver-based architecture that makes it easy to extend and support multiple database systems. The core logic is decoupled from any specific database implementation, allowing for a flexible and scalable design.
 
 - **`DatabaseDriver` Interface**: The contract for all database operations is defined in `src/db-drivers/database-driver.ts`. Any new database driver must implement this interface.
 - **Driver Implementations**: Each supported database has its own driver class (e.g., `PostgresDriver`) that contains the specific logic for that database.
 - **Driver Factory**: The `createDriver` function in `src/db-drivers/driver-factory.ts` is responsible for instantiating the correct driver based on the connection's `type`.
 
-### Extending DBMan (Adding a New Database)
+### Extending DBMux (Adding a New Database)
 
 To add support for a new database (e.g., MySQL), follow these steps:
 
@@ -75,16 +75,16 @@ This project uses specific versions of Node.js and pnpm, which are defined in th
 ### From npm (when published)
 
 ```bash
-npm install -g dbman
+npm install -g dbmux
 # or
-pnpm add -g dbman
+pnpm add -g dbmux
 ```
 
 ### From source
 
 ```bash
 git clone <repository-url>
-cd dbman
+cd dbmux
 pnpm install
 pnpm build
 npm link
@@ -123,78 +123,78 @@ You can connect to any supported database by specifying the flags, or run the co
 
 ```bash
 # Interactive mode
-dbman connect
+dbmux connect
 
 # Flag-based mode
-dbman connect --type postgresql -n my-postgres -u postgres -d myapp_production
+dbmux connect --type postgresql -n my-postgres -u postgres -d myapp_production
 ```
 
 ### List Operations
 
 ```bash
 # List saved connections
-dbman list --connections
-dbman config list
+dbmux list --connections
+dbmux config list
 
 # List all databases
-dbman list --databases
+dbmux list --databases
 
 # List tables in current database
-dbman list --tables
+dbmux list --tables
 
 # List tables in specific schema
-dbman list --tables --schema public
+dbmux list --tables --schema public
 
 # Use specific saved connection
-dbman list --tables -n production
+dbmux list --tables -n production
 ```
 
 ### Execute Queries
 
 ```bash
 # Execute a simple query
-dbman query -q "SELECT * FROM users LIMIT 5"
+dbmux query -q "SELECT * FROM users LIMIT 5"
 
 # Execute with specific output format
-dbman query -q "SELECT name, email FROM users" --format json
-dbman query -q "SELECT * FROM orders" --format csv
+dbmux query -q "SELECT name, email FROM users" --format json
+dbmux query -q "SELECT * FROM orders" --format csv
 
 # Execute from file
-dbman query -f queries.sql
+dbmux query -f queries.sql
 
 # Use saved connection
-dbman query -n production -q "SELECT version()"
+dbmux query -n production -q "SELECT version()"
 
 # Limit results
-dbman query -q "SELECT * FROM logs" --limit 100
+dbmux query -q "SELECT * FROM logs" --limit 100
 ```
 
 ### Database Backup & Restore (PostgreSQL Only)
 
 ```bash
 # Create a database dump (interactive mode)
-dbman dump
+dbmux dump
 
 # Create dump with specific database and output file
-dbman dump -d myapp_production -o backup
+dbmux dump -d myapp_production -o backup
 
 # Create dump with custom format
-dbman dump -d myapp_db --format plain
+dbmux dump -d myapp_db --format plain
 
 # Create dump with verbose output
-dbman dump -d myapp_db --verbose
+dbmux dump -d myapp_db --verbose
 
 # Restore from a dump file (interactive mode)
-dbman restore
+dbmux restore
 
 # Restore specific file to new database
-dbman restore -f backup.dump --create
+dbmux restore -f backup.dump --create
 
 # Restore and drop existing database
-dbman restore -f backup.dump -d myapp_dev --drop
+dbmux restore -f backup.dump -d myapp_dev --drop
 
 # Restore with verbose output
-dbman restore -f backup.dump --verbose
+dbmux restore -f backup.dump --verbose
 ```
 
 ### Configuration Management
@@ -203,24 +203,24 @@ Run commands with flags, or use the interactive prompts for adding and removing 
 
 ```bash
 # Add a new connection interactively
-dbman config add
+dbmux config add
 
 # Remove a connection interactively
-dbman config remove
+dbmux config remove
 
 # List all saved connections
-dbman config list
+dbmux config list
 
 # Set default connection
-dbman config default -n production
+dbmux config default -n production
 
 # Show configuration file location and contents
-dbman config show
+dbmux config show
 ```
 
 ## Commands Reference
 
-### `dbman connect [options]`
+### `dbmux connect [options]`
 
 Connect to a database. If required flags (like `--user` or `--file`) are omitted, it starts an interactive setup.
 
@@ -239,7 +239,7 @@ Connect to a database. If required flags (like `--user` or `--file`) are omitted
 | `--test`     |       | Test connection without saving           | `false`        | No                         |
 | `--verbose`  |       | Enable verbose logging from `pg_restore` | `false`        | No                         |
 
-### `dbman list [options]`
+### `dbmux list [options]`
 
 List databases, tables, or saved connections.
 
@@ -252,7 +252,7 @@ List databases, tables, or saved connections.
 | `--schema`      |        | Schema for table listing |
 | `--limit`       | `-l`   | Limit number of rows     |
 
-### `dbman query [options]`
+### `dbmux query [options]`
 
 Execute SQL queries with flexible output.
 
@@ -264,7 +264,7 @@ Execute SQL queries with flexible output.
 | `--format`     |       | Output format (table/json/csv) | table   |
 | `--limit`      | `-l`  | Limit number of rows           |         |
 
-### `dbman dump [options]`
+### `dbmux dump [options]`
 
 Create a backup of a PostgreSQL database. This command requires `pg_dump` to be installed and available in your system's PATH.
 
@@ -276,7 +276,7 @@ Create a backup of a PostgreSQL database. This command requires `pg_dump` to be 
 | `--format`     | `-F`       | Dump format (`custom`, `plain`, `tar`, `dir`) | `custom` |
 | `--verbose`    |            | Enable verbose logging from `pg_dump`         | `false`  |
 
-### `dbman restore [options]`
+### `dbmux restore [options]`
 
 Restore a PostgreSQL database from a dump file. This command requires `pg_restore` and `psql` to be installed and available in your system's PATH.
 
@@ -289,19 +289,19 @@ Restore a PostgreSQL database from a dump file. This command requires `pg_restor
 | `--drop`       |            | Drop the database before recreating and restoring | `false` |
 | `--verbose`    |            | Enable verbose logging from `pg_restore`          | `false` |
 
-### `dbman config <subcommand>`
+### `dbmux config <subcommand>`
 
 Manage configuration and connections.
 
-- `dbman config add` - Add a new connection interactively
-- `dbman config list` - List all saved connections
-- `dbman config remove [name]` - Remove a connection (interactive if name is omitted)
-- `dbman config default -n <name>` - Set default connection
-- `dbman config show` - Show config file and settings
+- `dbmux config add` - Add a new connection interactively
+- `dbmux config list` - List all saved connections
+- `dbmux config remove [name]` - Remove a connection (interactive if name is omitted)
+- `dbmux config default -n <name>` - Set default connection
+- `dbmux config show` - Show config file and settings
 
 ## Configuration
 
-DBMan stores configuration in `~/.dbman/config.json`. Each connection now has a `type` field.
+DBMux stores configuration in `~/.dbmux/config.json`. Each connection now has a `type` field.
 
 ```json
 {

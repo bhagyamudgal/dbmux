@@ -101,7 +101,7 @@ async function listConnectionsCommand(): Promise<void> {
 
     if (Object.keys(connections).length === 0) {
         logger.info("No saved connections found");
-        logger.info("Use 'dbman connect' to create a connection");
+        logger.info("Use 'dbmux connect' to create a connection");
         return;
     }
 

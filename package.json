@@ -1,11 +1,11 @@
 {
-    "name": "dbman",
+    "name": "dbmux",
     "version": "1.0.1",
-    "description": "A flexible PostgreSQL database management CLI tool with persistent configuration",
+    "description": "A flexible database management CLI tool with persistent configuration",
     "type": "module",
     "main": "dist/index.js",
     "bin": {
-        "dbman": "./dist/index.js"
+        "dbmux": "./dist/index.js"
     },
     "files": [
         "dist",
@@ -14,12 +14,12 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/bhagyamudgal/dbman.git"
+        "url": "https://github.com/bhagyamudgal/dbmux.git"
     },
     "bugs": {
-        "url": "https://github.com/bhagyamudgal/dbman/issues"
+        "url": "https://github.com/bhagyamudgal/dbmux/issues"
     },
-    "homepage": "https://github.com/bhagyamudgal/dbman#readme",
+    "homepage": "https://github.com/bhagyamudgal/dbmux#readme",
     "scripts": {
         "dev": "tsx src/index.ts",
         "dev:watch": "tsx watch src/index.ts",

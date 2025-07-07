@@ -4,10 +4,10 @@ import { join } from "path";
 import type { ConnectionConfig } from "../types/database.js";
 import { logger } from "../utils/logger.js";
 
-const CONFIG_DIR = join(homedir(), ".dbman");
+const CONFIG_DIR = join(homedir(), ".dbmux");
 const CONFIG_FILE = join(CONFIG_DIR, "config.json");
 
-export type DbmanConfig = {
+export type DbmuxConfig = {
     connections: Record<string, ConnectionConfig>;
     defaultConnection?: string;
     settings: {
@@ -17,7 +17,7 @@ export type DbmanConfig = {
     };
 };
 
-const DEFAULT_CONFIG: DbmanConfig = {
+const DEFAULT_CONFIG: DbmuxConfig = {
     connections: {},
     settings: {
         logLevel: "info",
@@ -32,7 +32,7 @@ function ensureConfigDir(): void {
     }
 }
 
-export function loadConfig(): DbmanConfig {
+export function loadConfig(): DbmuxConfig {
     ensureConfigDir();
 
     if (!existsSync(CONFIG_FILE)) {
@@ -41,7 +41,7 @@ export function loadConfig(): DbmanConfig {
 
     try {
         const configContent = readFileSync(CONFIG_FILE, "utf-8");
-        const config = JSON.parse(configContent) as DbmanConfig;
+        const config = JSON.parse(configContent) as DbmuxConfig;
 
         // Merge with defaults to ensure all fields exist
         return {
@@ -60,7 +60,7 @@ export function loadConfig(): DbmanConfig {
     }
 }
 
-export function saveConfig(config: DbmanConfig): void {
+export function saveConfig(config: DbmuxConfig): void {
     ensureConfigDir();
 
     try {
@@ -150,7 +150,7 @@ export function setDefaultConnection(name: string): void {
 }
 
 export function updateSettings(
-    settings: Partial<DbmanConfig["settings"]>
+    settings: Partial<DbmuxConfig["settings"]>
 ): void {
     const config = loadConfig();
     config.settings = { ...config.settings, ...settings };

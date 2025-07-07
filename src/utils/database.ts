@@ -44,7 +44,7 @@ export function getCurrentConnection() {
 
 function getDriver(): DatabaseDriver {
     if (!currentDriver) {
-        throw new Error("No database connection. Use 'dbman connect' first.");
+        throw new Error("No database connection. Use 'dbmux connect' first.");
     }
     return currentDriver;
 }

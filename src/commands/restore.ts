@@ -43,7 +43,7 @@ export async function executeRestoreCommand(
             connection = getConnection(options.connection);
         } catch {
             logger.fail(
-                "No database connection found. Run 'dbman connect' first."
+                "No database connection found. Run 'dbmux connect' first."
             );
             return;
         }

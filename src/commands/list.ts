@@ -33,7 +33,7 @@ function listSavedConnections() {
 
         if (connectionNames.length === 0) {
             logger.info(
-                "No saved connections found. Use 'dbman connect' to add one."
+                "No saved connections found. Use 'dbmux connect' to add one."
             );
             return;
         }
