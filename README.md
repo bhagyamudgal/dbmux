@@ -83,7 +83,7 @@ pnpm add -g dbmux
 ### From source
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/bhagyamudgal/dbmux.git
 cd dbmux
 pnpm install
 pnpm build
