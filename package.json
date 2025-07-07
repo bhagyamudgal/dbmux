@@ -1,6 +1,6 @@
 {
     "name": "dbman",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A flexible PostgreSQL database management CLI tool with persistent configuration",
     "type": "module",
     "main": "dist/index.js",
