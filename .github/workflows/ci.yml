@@ -10,7 +10,7 @@ on:
 
 jobs:
     build:
-        name: Build, Lint, and Format Check
+        name: Build, Lint, Format Check, and Test
         runs-on: ubuntu-latest
 
         steps:
@@ -37,3 +37,6 @@ jobs:
 
             - name: Build project
               run: pnpm build
+
+            - name: Test
+              run: pnpm test
