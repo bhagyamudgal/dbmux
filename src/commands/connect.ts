@@ -1,6 +1,10 @@
-import { getDriverDefaults } from "../db-drivers/driver-factory.js";
+import { confirm, input, select } from "@inquirer/prompts";
 import type { ConnectionConfig, DatabaseType } from "../types/database.js";
-import { addConnection } from "../utils/config.js";
+import {
+    addConnection,
+    getConnection,
+    listConnections,
+} from "../utils/config.js";
 import {
     closeConnection,
     connectToDatabase,
@@ -8,6 +12,7 @@ import {
 } from "../utils/database.js";
 import { logger } from "../utils/logger.js";
 import { promptForConnectionDetails } from "../utils/prompt.js";
+import { setActiveConnection } from "../utils/session.js";
 
 export type ConnectOptions = {
     name?: string;
@@ -19,59 +24,83 @@ export type ConnectOptions = {
     database?: string;
     file?: string;
     ssl?: boolean;
-    save?: boolean;
     test?: boolean;
 };
-
-function isInteractive(options: ConnectOptions): boolean {
-    if (options.type === "sqlite") {
-        return !options.file;
-    }
-    return !options.user || !options.database;
-}
 
 export async function executeConnectCommand(options: ConnectOptions) {
     logger.info("Attempting to connect to database...");
 
-    let config: ConnectionConfig;
+    let config: ConnectionConfig | null = null;
 
-    if (isInteractive(options)) {
+    if (options.name) {
+        try {
+            config = getConnection(options.name);
+            logger.info(`Connecting to saved connection: ${options.name}`);
+            setActiveConnection(options.name);
+        } catch (error) {
+            if (error instanceof Error) {
+                logger.warn(
+                    `Connection '${options.name}' not found.  Proceeding to create a new one.`
+                );
+            }
+        }
+    }
+
+    if (!config) {
+        const savedConnections = listConnections();
+        const savedConnectionNames = Object.keys(savedConnections);
+
+        if (savedConnectionNames.length > 0) {
+            const choice = await select({
+                message: "Choose a connection",
+                choices: [
+                    ...savedConnectionNames.map((name) => ({
+                        name,
+                        value: name,
+                    })),
+                    {
+                        name: "Connect to a new, unsaved connection",
+                        value: "new",
+                    },
+                ],
+            });
+
+            if (choice !== "new") {
+                config = getConnection(choice);
+                setActiveConnection(choice);
+            }
+        }
+    }
+
+    if (!config) {
         logger.info(
             "Required connection details not provided, starting interactive mode..."
         );
         config = await promptForConnectionDetails();
-    } else {
-        const type = options.type || "postgresql";
-        if (type === "sqlite") {
-            if (!options.file) {
-                logger.fail(
-                    "File path is required for SQLite connections (--file)"
-                );
-                return;
-            }
-            config = {
-                type,
-                filePath: options.file,
-            };
-        } else {
-            const defaults = getDriverDefaults(type);
-            config = {
-                type,
-                host: options.host ?? defaults.host ?? "localhost",
-                port: options.port ?? defaults.port ?? 5432,
-                ssl: options.ssl ?? defaults.ssl ?? false,
-            };
 
-            if (options.user) config.user = options.user;
-            if (options.password) config.password = options.password;
-            if (options.database) config.database = options.database;
+        const shouldSave = await confirm({
+            message: "Do you want to save this new connection?",
+            default: true,
+        });
 
-            if (!config.user || !config.database) {
-                logger.fail(
-                    "User and database are required for this connection type"
-                );
-                return;
-            }
+        if (shouldSave) {
+            const defaultName =
+                config.type === "sqlite"
+                    ? `sqlite-${config.filePath?.split("/").pop()?.split(".")[0]}`
+                    : `${config.user}@${config.host}/${config.database}`;
+
+            const connectionName = await input({
+                message:
+                    "Enter a name for this connection (or press Enter for default):",
+                default: defaultName,
+            });
+
+            const finalName = connectionName || defaultName;
+            addConnection(finalName, config as ConnectionConfig);
+            setActiveConnection(finalName);
+            logger.success(
+                `Connection '${finalName}' added and saved successfully.`
+            );
         }
     }
 
@@ -95,22 +124,11 @@ export async function executeConnectCommand(options: ConnectOptions) {
         logger.success("Connection test successful!");
 
         if (options.test) {
-            logger.info("Test mode - connection not saved or established.");
+            logger.info("Test mode - connection not established.");
             return;
         }
 
         await connectToDatabase(config);
-
-        if (options.save !== false) {
-            const connectionName =
-                options.name ||
-                (config.type === "sqlite"
-                    ? `sqlite-${config.filePath?.split("/").pop()?.split(".")[0]}`
-                    : `${config.user}@${config.host}/${config.database}`);
-
-            addConnection(connectionName, config);
-            logger.success(`Connection saved as '${connectionName}'`);
-        }
     } catch (error) {
         if (error instanceof Error) {
             logger.fail(`Connection failed: ${error.message}`);

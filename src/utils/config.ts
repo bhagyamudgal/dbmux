@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { homedir } from "os";
 import { join } from "path";
 import type { ConnectionConfig } from "../types/database.js";
 import { logger } from "../utils/logger.js";
+import { CONFIG_DIR } from "./constants.js";
+import { getActiveConnection } from "./session.js";
 
-const CONFIG_DIR = join(homedir(), ".dbmux");
 const CONFIG_FILE = join(CONFIG_DIR, "config.json");
 
 export type DbmuxConfig = {
@@ -113,16 +113,39 @@ export function removeConnection(name: string): void {
     saveConfig(config);
 }
 
-export function getConnection(name?: string): ConnectionConfig {
+export function renameConnection(oldName: string, newName: string): void {
     const config = loadConfig();
 
-    if (!name && !config.defaultConnection) {
-        throw new Error(
-            "No connection specified and no default connection set"
-        );
+    if (!config.connections[oldName]) {
+        throw new Error(`Connection '${oldName}' does not exist`);
     }
 
-    const connectionName = name ?? (config.defaultConnection as string);
+    if (config.connections[newName]) {
+        throw new Error(`Connection '${newName}' already exists`);
+    }
+
+    config.connections[newName] = config.connections[oldName]!;
+    delete config.connections[oldName];
+
+    if (config.defaultConnection === oldName) {
+        config.defaultConnection = newName;
+    }
+
+    saveConfig(config);
+}
+
+export function getConnection(name?: string): ConnectionConfig {
+    const config = loadConfig();
+    const activeConnectionName = getActiveConnection();
+
+    const connectionName =
+        name ?? activeConnectionName ?? config.defaultConnection;
+
+    if (!connectionName) {
+        throw new Error(
+            "No connection specified, no active session, and no default connection set."
+        );
+    }
 
     const connection = config.connections[connectionName];
 

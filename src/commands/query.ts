@@ -9,6 +9,7 @@ export type QueryOptions = {
     sql?: string;
     file?: string;
     connection?: string;
+    database?: string;
     format?: "table" | "json" | "csv";
     limit?: number;
 };
@@ -16,16 +17,20 @@ export type QueryOptions = {
 export async function executeQueryCommand(
     options: QueryOptions
 ): Promise<void> {
-    await withDatabaseConnection(options.connection, async () => {
-        const sql = getQuery(options);
-        if (!sql) {
-            logger.fail("No SQL query provided. Use --sql or --file.");
-            return;
-        }
+    await withDatabaseConnection(
+        options.connection,
+        async () => {
+            const sql = getQuery(options);
+            if (!sql) {
+                logger.fail("No SQL query provided. Use --sql or --file.");
+                return;
+            }
 
-        const result = await executeQuery(sql);
-        displayResults(result, options.format || "table");
-    });
+            const result = await executeQuery(sql);
+            displayResults(result, options.format || "table");
+        },
+        options.database
+    );
 }
 
 function getQuery(options: QueryOptions): string | null {

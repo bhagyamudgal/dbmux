@@ -8,11 +8,18 @@ import { logger } from "./logger.js";
 
 export async function withDatabaseConnection(
     connectionName: string | undefined,
-    action: () => Promise<void>
+    action: () => Promise<void>,
+    databaseOverride?: string
 ) {
     try {
-        const connection =
+        let connection =
             getCurrentConnection() || getConnection(connectionName);
+        if (databaseOverride) {
+            connection = { ...connection, database: databaseOverride };
+            logger.info(
+                `Overriding connection to use database: ${databaseOverride}`
+            );
+        }
         await connectToDatabase(connection);
         await action();
     } catch (error) {

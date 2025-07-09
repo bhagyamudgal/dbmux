@@ -385,6 +385,99 @@ The package is configured for npm publishing with:
 - Comprehensive `files` array for package inclusion
 - Rich metadata and keywords for discoverability
 
+## Detailed Commands
+
+### `connect`
+
+Connect to a database. You can connect to a pre-existing saved connection, or create a new one. Creating a new connection will prompt you to save it for future use.
+
+```bash
+dbmux connect
+# or specify a saved connection
+dbmux connect --name my-connection
+```
+
+This command sets the chosen connection as the "active" connection for your current session, which will be used by other commands until you `disconnect` or choose a new one.
+
+### `config`
+
+Manage your saved connections.
+
+- **`config add`**: Interactively add a new connection.
+- **`config list`**: List all saved connections.
+- **`config remove`**: Remove a saved connection.
+- **`config default <name>`**: Set the default connection.
+- **`config show`**: Show the full configuration file.
+- **`config path`**: Display the path to your config file.
+- **`config rename`**: Interactively rename a connection.
+- **`config manage`**: Open an interactive menu for connection management.
+
+### `list`
+
+List databases, tables, or saved connections.
+
+- `--databases`: List all databases.
+- `--tables`: List tables in the current database.
+- `--connections`: List all saved connection names.
+- `--connection <name>`: Use a specific saved connection.
+- `--database <db_name>`: Temporarily switch to a different database for this command.
+- `--schema <schema_name>`: Specify a schema (default: `public`).
+
+### `query`
+
+Execute SQL queries.
+
+- `--sql <"query">`: The SQL query to execute.
+- `--file <path>`: Path to a `.sql` file.
+- `--connection <name>`: Use a specific saved connection.
+- `--database <db_name>`: Temporarily switch to a different database for this command.
+- `--format <format>`: Output format (`table`, `json`, `csv`).
+- `--limit <number>`: Limit the number of returned rows.
+
+### `dump`
+
+Create a backup of a PostgreSQL database. This command requires `pg_dump` to be installed and available in your system's PATH.
+
+- `--connection <name>`: Use a specific saved connection.
+- `--database <db_name>`: The database to dump (interactive if not set).
+- `--output <path>`: Output file path.
+- `--verbose`: Enable verbose logging.
+
+### `restore`
+
+Restore a database from a dump file.
+
+- `--file <path>`: Path to the dump file.
+- `--database <db_name>`: The target database name.
+- `--connection <name>`: Use a specific saved connection.
+- `--create`: Create the database before restoring.
+- `--drop`: Drop the database before restoring.
+- `--verbose`: Enable verbose logging.
+
+### `status`
+
+Shows the current active (session) and default (saved) connections.
+
+```bash
+dbmux status
+```
+
+### `disconnect`
+
+Clears the active connection from your session, reverting all subsequent commands to use the saved default connection.
+
+```bash
+dbmux disconnect
+```
+
+## Contributing
+
+<!-- ... existing code ... -->
+
+```
+
+```
+
 ```
 
 ```

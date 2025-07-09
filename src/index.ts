@@ -9,10 +9,12 @@ import { logger } from "./utils/logger.js";
 // Import commands
 import { executeConfigCommand } from "./commands/config.js";
 import { executeConnectCommand } from "./commands/connect.js";
+import { executeDisconnectCommand } from "./commands/disconnect.js";
 import { executeDumpCommand } from "./commands/dump.js";
 import { executeListCommand } from "./commands/list.js";
 import { executeQueryCommand } from "./commands/query.js";
 import { executeRestoreCommand } from "./commands/restore.js";
+import { executeStatusCommand } from "./commands/status.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -57,6 +59,7 @@ const listCommand = command({
         connections: boolean().alias("c"),
         connection: string().alias("n"),
         schema: string().default("public"),
+        database: string().alias("d"),
     },
     handler: executeListCommand,
 });
@@ -68,6 +71,7 @@ const queryCommand = command({
         sql: string().alias("q"),
         file: string().alias("f"),
         connection: string().alias("n"),
+        database: string().alias("d"),
         format: string().enum("table", "json", "csv").default("table"),
         limit: number().min(1).alias("l"),
     },
@@ -144,7 +148,47 @@ const configCommand = command({
             options: {},
             handler: () => executeConfigCommand({ action: "show" }),
         }),
+        command({
+            name: "path",
+            desc: "Show the configuration file path",
+            options: {},
+            handler: () => executeConfigCommand({ action: "path" }),
+        }),
+        command({
+            name: "rename",
+            desc: "Rename a connection",
+            options: {
+                name: string().alias("n"),
+                newName: string().alias("nn"),
+            },
+            handler: (options) =>
+                executeConfigCommand({
+                    action: "rename",
+                    name: options.name,
+                    newName: options.newName,
+                }),
+        }),
+        command({
+            name: "manage",
+            desc: "Manage connections interactively",
+            options: {},
+            handler: () => executeConfigCommand({ action: "manage" }),
+        }),
     ],
+});
+
+const statusCommand = command({
+    name: "status",
+    desc: "Show the current default connection",
+    options: {},
+    handler: executeStatusCommand,
+});
+
+const disconnectCommand = command({
+    name: "disconnect",
+    desc: "Clear the active connection session",
+    options: {},
+    handler: executeDisconnectCommand,
 });
 
 async function main(): Promise<void> {
@@ -157,6 +201,8 @@ async function main(): Promise<void> {
         dumpCommand,
         restoreCommand,
         configCommand,
+        statusCommand,
+        disconnectCommand,
     ];
 
     await run(commands, {

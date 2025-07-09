@@ -10,15 +10,16 @@ export type ListOptions = {
     connections?: boolean;
     connection?: string;
     schema?: string;
+    database?: string;
 };
 
 export async function executeListCommand(options: ListOptions) {
     if (options.connections) {
         listSavedConnections();
     } else if (options.databases) {
-        await listDatabases(options.connection);
+        await listDatabases(options.connection, options.database);
     } else if (options.tables) {
-        await listTables(options.connection, options.schema);
+        await listTables(options.connection, options.schema, options.database);
     } else {
         logger.info(
             "No list option specified. Use --databases, --tables, or --connections."
@@ -47,41 +48,53 @@ function listSavedConnections() {
     }
 }
 
-async function listDatabases(connectionName?: string) {
-    await withDatabaseConnection(connectionName, async () => {
-        const databases = await getDatabases();
+async function listDatabases(connectionName?: string, database?: string) {
+    await withDatabaseConnection(
+        connectionName,
+        async () => {
+            const databases = await getDatabases();
 
-        if (databases.length === 0) {
-            logger.info("No databases found.");
-            return;
-        }
+            if (databases.length === 0) {
+                logger.info("No databases found.");
+                return;
+            }
 
-        const tableData = [
-            ["Name", "Owner", "Encoding", "Size"],
-            ...databases.map((db) => [
-                db.name,
-                db.owner || "-",
-                db.encoding || "-",
-                db.size || "-",
-            ]),
-        ];
+            const tableData = [
+                ["Name", "Owner", "Encoding", "Size"],
+                ...databases.map((db) => [
+                    db.name,
+                    db.owner || "-",
+                    db.encoding || "-",
+                    db.size || "-",
+                ]),
+            ];
 
-        logger.raw(table(tableData));
-    });
+            logger.raw(table(tableData));
+        },
+        database
+    );
 }
 
-async function listTables(connectionName?: string, schema?: string) {
-    await withDatabaseConnection(connectionName, async () => {
-        const tables = await getTables(schema);
+async function listTables(
+    connectionName?: string,
+    schema?: string,
+    database?: string
+) {
+    await withDatabaseConnection(
+        connectionName,
+        async () => {
+            const tables = await getTables(schema);
 
-        if (tables.length === 0) {
-            logger.info("No tables found in the current database.");
-            return;
-        }
+            if (tables.length === 0) {
+                logger.info("No tables found in the current database.");
+                return;
+            }
 
-        logger.info("Tables:");
-        for (const tableName of tables) {
-            logger.raw(`- ${tableName}`);
-        }
-    });
+            logger.info("Tables:");
+            for (const tableName of tables) {
+                logger.raw(`- ${tableName}`);
+            }
+        },
+        database
+    );
 }
