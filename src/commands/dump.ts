@@ -79,8 +79,10 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
         }
 
         // Get output filename
-        let outputFile = options.output;
-        if (!outputFile) {
+        let outputFile: string;
+        if (options.output) {
+            outputFile = options.output;
+        } else {
             const defaultName = generateDumpFilename(selectedDatabase);
             logger.info(`Default filename: ${defaultName}`);
 
@@ -90,8 +92,6 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             });
 
             outputFile = customName || defaultName;
-        } else {
-            outputFile = generateDumpFilename(selectedDatabase, outputFile);
         }
 
         // Confirm dump operation

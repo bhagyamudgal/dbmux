@@ -68,7 +68,7 @@ export async function executeCommand(
     return new Promise((resolve) => {
         const childProcess = spawn(command, args, {
             env: { ...process.env, ...env },
-            stdio: ["inherit", "pipe", "pipe"],
+            stdio: ["ignore", "pipe", "pipe"],
         });
 
         let stdout = "";
