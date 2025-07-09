@@ -115,6 +115,23 @@ pnpm format
 pnpm format:check
 ```
 
+### Testing
+
+This project uses [Vitest](https://vitest.dev/) for unit testing. The testing philosophy is to test each command in complete isolation by mocking its dependencies (like file system access and loggers). This ensures that tests are fast, reliable, and don't have side effects.
+
+Tests are located in the `tests/` directory and follow the naming convention `*.test.ts`.
+
+```bash
+# Run the entire test suite once
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests and generate a coverage report
+pnpm coverage
+```
+
 ## Usage
 
 ### Connect to a Database

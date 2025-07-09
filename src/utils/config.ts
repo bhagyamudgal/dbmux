@@ -1,23 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import type { ConnectionConfig } from "../types/database.js";
+import type { ConnectionConfig, DBmuxConfig } from "../types/database.js";
 import { logger } from "../utils/logger.js";
 import { CONFIG_DIR } from "./constants.js";
 import { getActiveConnection } from "./session.js";
 
 const CONFIG_FILE = join(CONFIG_DIR, "config.json");
 
-export type DbmuxConfig = {
-    connections: Record<string, ConnectionConfig>;
-    defaultConnection?: string;
-    settings: {
-        logLevel: "debug" | "info" | "warn" | "error";
-        autoConnect: boolean;
-        queryTimeout: number;
-    };
-};
-
-const DEFAULT_CONFIG: DbmuxConfig = {
+const DEFAULT_CONFIG: DBmuxConfig = {
     connections: {},
     settings: {
         logLevel: "info",
@@ -32,7 +22,7 @@ function ensureConfigDir(): void {
     }
 }
 
-export function loadConfig(): DbmuxConfig {
+export function loadConfig(): DBmuxConfig {
     ensureConfigDir();
 
     if (!existsSync(CONFIG_FILE)) {
@@ -41,7 +31,7 @@ export function loadConfig(): DbmuxConfig {
 
     try {
         const configContent = readFileSync(CONFIG_FILE, "utf-8");
-        const config = JSON.parse(configContent) as DbmuxConfig;
+        const config = JSON.parse(configContent) as DBmuxConfig;
 
         // Merge with defaults to ensure all fields exist
         return {
@@ -60,7 +50,7 @@ export function loadConfig(): DbmuxConfig {
     }
 }
 
-export function saveConfig(config: DbmuxConfig): void {
+export function saveConfig(config: DBmuxConfig): void {
     ensureConfigDir();
 
     try {
@@ -173,7 +163,7 @@ export function setDefaultConnection(name: string): void {
 }
 
 export function updateSettings(
-    settings: Partial<DbmuxConfig["settings"]>
+    settings: Partial<DBmuxConfig["settings"]>
 ): void {
     const config = loadConfig();
     config.settings = { ...config.settings, ...settings };
