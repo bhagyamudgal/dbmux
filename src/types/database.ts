@@ -46,3 +46,13 @@ export type TableDetail = {
     columns: ColumnInfo[];
     rowCount: number;
 };
+
+export type DBmuxConfig = {
+    connections: Record<string, ConnectionConfig>;
+    defaultConnection?: string;
+    settings: {
+        logLevel: "debug" | "info" | "warn" | "error";
+        autoConnect: boolean;
+        queryTimeout: number;
+    };
+};

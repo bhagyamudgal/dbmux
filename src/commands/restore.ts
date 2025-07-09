@@ -34,7 +34,7 @@ export async function executeRestoreCommand(
         // Validate options
         if (options.file && !fs.existsSync(options.file)) {
             logger.fail(`Dump file not found: ${options.file}`);
-            return;
+            process.exit(1);
         }
 
         // Get connection config
@@ -45,14 +45,14 @@ export async function executeRestoreCommand(
             logger.fail(
                 "No database connection found. Run 'dbmux connect' first."
             );
-            return;
+            process.exit(1);
         }
 
         if (connection.type !== "postgresql") {
             logger.fail(
                 "Restore command is currently only supported for PostgreSQL databases."
             );
-            return;
+            process.exit(1);
         }
 
         // Test connection first
@@ -71,7 +71,7 @@ export async function executeRestoreCommand(
                 logger.info(
                     "Dump files should have extensions: .dump, .sql, .gz, .tar"
                 );
-                return;
+                process.exit(1);
             }
 
             dumpFile = await select({
@@ -92,7 +92,7 @@ export async function executeRestoreCommand(
             await verifyDumpFile(dumpFile);
         } catch {
             logger.fail(`Dump file verification failed.`);
-            return;
+            process.exit(1);
         }
 
         // Select restore target
@@ -153,7 +153,7 @@ export async function executeRestoreCommand(
 
                 if (databases.length === 0) {
                     logger.fail("No databases found");
-                    return;
+                    process.exit(1);
                 }
 
                 targetDatabase = await select({
