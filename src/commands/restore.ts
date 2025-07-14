@@ -55,8 +55,7 @@ export async function executeRestoreCommand(
             process.exit(1);
         }
 
-        // Test connection first
-        logger.info("Testing database connection...");
+        // Connect to database for operations
         await connectToDatabase(connection);
 
         // Select dump file to restore
@@ -88,8 +87,9 @@ export async function executeRestoreCommand(
 
         // Verify dump file
         logger.info("Verifying dump file...");
+        let isCustomFormat: boolean;
         try {
-            await verifyDumpFile(dumpFile);
+            isCustomFormat = await verifyDumpFile(dumpFile);
         } catch {
             logger.fail(`Dump file verification failed.`);
             process.exit(1);
@@ -147,7 +147,7 @@ export async function executeRestoreCommand(
             });
 
             if (restoreAction === "existing") {
-                // Get available databases
+                // Get available databases (cached for performance)
                 logger.info("Fetching available databases...");
                 const databases = await getDatabases();
 
@@ -220,6 +220,7 @@ export async function executeRestoreCommand(
             createDatabase,
             dropExisting,
             verbose: options.verbose || false,
+            isCustomFormat, // Pass the verification result to avoid duplicate check
         });
 
         logger.success("Restore completed successfully!");
