@@ -18,6 +18,7 @@ export type RestoreOptions = {
     createDatabase?: boolean;
     dropExisting?: boolean;
     verbose?: boolean;
+    isCustomFormat?: boolean;
 };
 
 export type DumpFileInfo = {
@@ -80,6 +81,49 @@ export async function executeCommand(
 
         childProcess.stderr?.on("data", (data: Buffer) => {
             stderr += data.toString();
+        });
+
+        childProcess.on("close", (code: number | null) => {
+            resolve({
+                success: code === 0,
+                output: stdout,
+                error: stderr,
+            });
+        });
+    });
+}
+
+export async function executeCommandWithProgress(
+    command: string,
+    args: string[],
+    env?: Record<string, string>,
+    showProgress = false
+): Promise<{ success: boolean; output: string; error: string }> {
+    return new Promise((resolve) => {
+        const childProcess = spawn(command, args, {
+            env: { ...process.env, ...env },
+            stdio: ["ignore", "pipe", "pipe"],
+        });
+
+        let stdout = "";
+        let stderr = "";
+
+        childProcess.stdout?.on("data", (data: Buffer) => {
+            const output = data.toString();
+            stdout += output;
+            if (showProgress) {
+                // Show pg_restore progress output
+                process.stdout.write(output);
+            }
+        });
+
+        childProcess.stderr?.on("data", (data: Buffer) => {
+            const error = data.toString();
+            stderr += error;
+            if (showProgress) {
+                // pg_restore sends progress info to stderr
+                process.stderr.write(error);
+            }
         });
 
         childProcess.on("close", (code: number | null) => {
@@ -187,12 +231,14 @@ export async function restoreDatabase(
         "--no-owner",
     ];
 
-    if (options.verbose) {
-        args.push("--verbose");
-    }
+    // Always enable verbose mode for progress feedback
+    args.push("--verbose");
 
-    // Check if it's a custom format dump
-    const isCustomFormat = await verifyDumpFile(inputPath);
+    // Check if it's a custom format dump (use passed result if available)
+    const isCustomFormat =
+        options.isCustomFormat !== undefined
+            ? options.isCustomFormat
+            : await verifyDumpFile(inputPath);
 
     if (isCustomFormat) {
         args.push(inputPath);
@@ -202,7 +248,15 @@ export async function restoreDatabase(
             env.PGPASSWORD = connection.password;
         }
 
-        const result = await executeCommand("pg_restore", args, env);
+        logger.info("Starting pg_restore operation...");
+        logger.info("This may take a while for large databases...");
+
+        const result = await executeCommandWithProgress(
+            "pg_restore",
+            args,
+            env,
+            true
+        );
 
         if (!result.success) {
             throw new Error(`pg_restore failed: ${result.error}`);
@@ -227,7 +281,15 @@ export async function restoreDatabase(
             env.PGPASSWORD = connection.password;
         }
 
-        const result = await executeCommand("psql", psqlArgs, env);
+        logger.info("Starting psql restore operation...");
+        logger.info("This may take a while for large SQL files...");
+
+        const result = await executeCommandWithProgress(
+            "psql",
+            psqlArgs,
+            env,
+            true
+        );
 
         if (!result.success) {
             throw new Error(`psql restore failed: ${result.error}`);
@@ -241,18 +303,20 @@ export async function verifyDumpFile(filePath: string): Promise<boolean> {
     try {
         logger.info(`Verifying dump file: ${basename(filePath)}`);
 
-        // Try to list the dump contents (works for custom format)
+        const fileExt = extname(filePath).toLowerCase();
+
+        // Fast path: Check if it's a plain SQL file first
+        if (fileExt === ".sql") {
+            logger.success("Dump file detected as plain SQL format");
+            return false; // false means it's not custom format (but still valid)
+        }
+
+        // For other formats (.dump, .tar, .gz), try to list contents
         const result = await executeCommand("pg_restore", ["--list", filePath]);
 
         if (result.success) {
             logger.success("Dump file verification passed (custom format)");
             return true;
-        }
-
-        // If pg_restore fails, it might be a plain SQL file
-        if (extname(filePath).toLowerCase() === ".sql") {
-            logger.success("Dump file detected as plain SQL format");
-            return false; // false means it's not custom format (but still valid)
         }
 
         throw new Error("Invalid or corrupted dump file");
@@ -309,7 +373,13 @@ export async function dropAndRecreateDatabase(
 ): Promise<void> {
     logger.info(`Dropping and recreating database: ${databaseName}`);
 
+    const env: Record<string, string> = {};
+    if (connection.password) {
+        env.PGPASSWORD = connection.password;
+    }
+
     // First, terminate active connections
+    logger.info("Terminating active connections...");
     const terminateArgs = [
         "--host",
         connection.host || "localhost",
@@ -323,14 +393,10 @@ export async function dropAndRecreateDatabase(
         `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${databaseName}' AND pid <> pg_backend_pid();`,
     ];
 
-    const env: Record<string, string> = {};
-    if (connection.password) {
-        env.PGPASSWORD = connection.password;
-    }
-
     await executeCommand("psql", terminateArgs, env);
 
-    // Drop the database
+    // Drop the database (must be separate command)
+    logger.info(`Dropping database '${databaseName}'...`);
     const dropArgs = [
         "--host",
         connection.host || "localhost",
@@ -352,7 +418,8 @@ export async function dropAndRecreateDatabase(
         );
     }
 
-    // Create the database
+    // Create the database (must be separate command)
+    logger.info(`Creating database '${databaseName}'...`);
     await createDatabase(connection, databaseName);
 }
 
