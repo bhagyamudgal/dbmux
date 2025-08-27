@@ -6,34 +6,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Package Management
 
-- **Package Manager**: Always use `pnpm` (v10.0.0+)
-- **Install dependencies**: `pnpm install`
-- **Development**: `pnpm dev` (one-time run) or `pnpm dev:watch` (watch mode)
-- **Build**: `pnpm build` (builds to `dist/`)
-- **Test**: `pnpm test` (run once), `pnpm test:watch` (watch mode), `pnpm coverage` (with coverage)
+- **Package Manager**: Always use `bun` (v1.1.0+) - replaced pnpm for better performance and compatibility
+- **Install dependencies**: `bun install`
+- **Development**: `bun run dev` (one-time run) or `bun run dev:watch` (watch mode)
+- **Build**: `bun run build` (builds to `dist/`)
+- **Test**: `bun run test` (run once), `bun run test:watch` (watch mode), `bun run coverage` (with coverage)
+- **Binary Build**: `bun run build:binary` (creates executable), `bun run build:linux` (cross-platform)
 
 ### Code Quality
 
-- **Type checking**: `pnpm typecheck` (required before commits)
-- **Linting**: `pnpm lint` (ESLint with TypeScript)
-- **Formatting**: `pnpm format` (write) or `pnpm format:check` (check only)
+- **Type checking**: `bun run typecheck` (required before commits)
+- **Linting**: `bun run lint` (ESLint with TypeScript)
+- **Formatting**: `bun run format` (write) or `bun run format:check` (check only)
 
 ### Build & Distribution
 
-- **Clean build**: `pnpm clean && pnpm build`
-- **Production start**: `pnpm start` (runs built CLI)
-- **Link for testing**: `npm link` (after building)
+- **Clean build**: `bun run clean && bun run build`
+- **Production start**: `bun run start` (runs built CLI)
+- **Link for testing**: `bun link` (after building)
+- **Binary compilation**: `bun run build:binary` (single executable)
+- **Cross-platform binaries**: `bun run build:linux`, `bun run build:macos-arm64`, `bun run build:windows`
 
 ## Architecture Overview
 
-DBMux is a TypeScript CLI tool built with a driver-based architecture for multi-database support:
+DBMux is a TypeScript CLI tool built with Bun runtime and a driver-based architecture for multi-database support:
 
 ### Core Architecture
 
+- **Runtime**: Bun runtime (replaces Node.js) for improved performance and compatibility
 - **CLI Framework**: Built with `@drizzle-team/brocli` for type-safe command parsing
 - **Driver Pattern**: `DatabaseDriver` interface (`src/db-drivers/database-driver.ts`) enables multi-database support
 - **Configuration**: JSON-based config stored in `~/.dbmux/config.json`
 - **Session Management**: Active connections tracked in `~/.dbmux/session.json`
+- **Connection Methods**: Support for both database URLs (`postgresql://...`) and individual parameters
 
 ### Key Components
 
@@ -69,6 +74,8 @@ Tests use **Vitest** with complete isolation and mocking:
 - Config loaded from `~/.dbmux/config.json` with defaults
 - Connections stored with `type`, `host`, `port`, `user`, `database`, etc.
 - Session-based active connection overrides default connection
+- URL-based connections: `postgresql://user:pass@host:port/db?ssl=true`
+- Interactive prompts offer choice between URL input or individual fields
 
 ### Error Handling
 
@@ -84,6 +91,8 @@ All commands follow similar patterns:
 - Handler functions in `src/commands/`
 - Use `getConnection()` for database config resolution
 - Interactive prompts when required options missing
+- URL parsing support in `src/utils/prompt.ts` for database URLs
+- Connection method selection (URL vs individual fields) in interactive mode
 
 ### Database Operations
 
@@ -133,11 +142,11 @@ All commands follow similar patterns:
 ### Development Dependencies
 
 - `typescript` - Type checking
-- `tsx` - TypeScript execution
-- `vitest` - Testing framework
+- `vitest` - Testing framework (kept for compatibility with vi.hoisted())
 - `eslint` + `@typescript-eslint/*` - Linting
 - `prettier` - Code formatting
 - `husky` + `lint-staged` - Git hooks
+- **Note**: Bun handles TypeScript execution natively, no need for `tsx`
 
 ## Special Considerations
 
@@ -156,5 +165,39 @@ All commands follow similar patterns:
 ### CLI Distribution
 
 - Built as global npm package with `bin` entry
+- Compiled to single executable binaries for distribution
 - ESM modules throughout
-- Requires Node.js 22+ and pnpm 10+
+- Requires Bun 1.1.0+ (replaces Node.js requirement)
+- Cross-platform binaries via GitHub releases
+- Binary execution detection with `/$bunfs/root/` path handling
+
+## New Features (Latest Updates)
+
+### Database URL Connection Support
+
+- **URL Parsing**: Support for `postgresql://`, `postgres://`, and `sqlite://` URLs
+- **SSL Detection**: Automatic SSL enablement from URL parameters (`?ssl=true`, `?sslmode=require`)
+- **Interactive Choice**: Users can choose between URL input or individual field input
+- **CLI Flag**: Direct URL usage via `--url` or `-U` flag
+- **Validation**: Comprehensive URL format and protocol validation
+
+### Bun Runtime Migration
+
+- **Performance**: Faster startup and execution compared to Node.js
+- **Compatibility**: Native TypeScript support, no transpilation needed
+- **Binary Compilation**: Single executable generation for easy distribution
+- **Package Management**: Unified toolchain (runtime + package manager)
+
+### Testing Infrastructure
+
+- **Framework**: Vitest (maintained for vi.hoisted() compatibility)
+- **Coverage**: 106 tests passing with comprehensive URL feature coverage
+- **Mocking Strategy**: Complete isolation using vi.hoisted() for predictable tests
+- **Test Files**: `tests/connect.test.ts`, `tests/prompt.test.ts` for URL functionality
+
+# important-instruction-reminders
+
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (\*.md) or README files. Only create documentation files if explicitly requested by the User.

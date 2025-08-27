@@ -58,17 +58,17 @@ To add support for a new database (e.g., MySQL), follow these steps:
 4.  **Install Dependencies**: Install the required Node.js package for the new database.
 
     ```bash
-    pnpm add mysql2
+    bun add mysql2
     ```
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js**: `v22.0.0` or higher
-- **pnpm**: `v10.0.0` or higher
+- **Bun**: `v1.1.0` or higher
+- **Node.js**: `v22.0.0` or higher (for npm distribution compatibility)
 
-This project uses specific versions of Node.js and pnpm, which are defined in the `engines` field of the `package.json` file.
+This project uses Bun as the primary runtime and package manager for optimal performance.
 
 ## Installation
 
@@ -77,7 +77,7 @@ This project uses specific versions of Node.js and pnpm, which are defined in th
 ```bash
 npm install -g dbmux
 # or
-pnpm add -g dbmux
+bun add -g dbmux
 ```
 
 ### From source
@@ -85,9 +85,9 @@ pnpm add -g dbmux
 ```bash
 git clone https://github.com/bhagyamudgal/dbmux.git
 cd dbmux
-pnpm install
-pnpm build
-npm link
+bun install
+bun run build
+bun link
 ```
 
 ## Development
@@ -96,23 +96,23 @@ The development setup includes TypeScript, ESLint for code quality, and Prettier
 
 ```bash
 # Install dependencies
-pnpm install
+bun install
 
 # Run in development mode (with hot reload)
-pnpm dev:watch
+bun run dev:watch
 
 # Build for production
-pnpm build
+bun run build
 
 # Type checking
-pnpm typecheck
+bun run typecheck
 
 # Linting
-pnpm lint
+bun run lint
 
 # Formatting
-pnpm format
-pnpm format:check
+bun run format
+bun run format:check
 ```
 
 ### Testing
@@ -123,26 +123,29 @@ Tests are located in the `tests/` directory and follow the naming convention `*.
 
 ```bash
 # Run the entire test suite once
-pnpm test
+bun run test
 
 # Run tests in watch mode
-pnpm test:watch
+bun run test:watch
 
 # Run tests and generate a coverage report
-pnpm coverage
+bun run coverage
 ```
 
 ## Usage
 
 ### Connect to a Database
 
-You can connect to any supported database by specifying the flags, or run the command without flags for an interactive setup.
+You can connect to any supported database by specifying the flags, or run the command without flags for an interactive setup. You can now use database URLs for quick connections.
 
 ```bash
-# Interactive mode
+# Interactive mode (choose between URL or individual fields)
 dbmux connect
 
-# Flag-based mode
+# Using a database URL
+dbmux connect --url "postgresql://user:password@localhost:5432/mydb"
+
+# Flag-based mode with individual parameters
 dbmux connect --type postgresql -n my-postgres -u postgres -d myapp_production
 ```
 
@@ -241,20 +244,21 @@ dbmux config show
 
 Connect to a database. If required flags (like `--user` or `--file`) are omitted, it starts an interactive setup.
 
-| Option       | Alias | Description                              | Default        | Required (non-interactive) |
-| ------------ | ----- | ---------------------------------------- | -------------- | -------------------------- |
-| `--type`     |       | Database type (e.g., `postgresql`)       | `postgresql`   | No                         |
-| `--name`     | `-n`  | Connection name for saving               | auto-generated | No                         |
-| `--host`     | `-H`  | Database host (not for SQLite)           | `localhost`    | No                         |
-| `--port`     | `-p`  | Database port (not for SQLite)           | `5432`         | No                         |
-| `--user`     | `-u`  | Database username (not for SQLite)       | -              | **Yes**                    |
-| `--password` | `-w`  | Database password                        | prompt         | No                         |
-| `--database` | `-d`  | Database name (not for SQLite)           | -              | **Yes**                    |
-| `--file`     |       | File path for SQLite connection          | -              | **Yes**                    |
-| `--ssl`      |       | Use SSL connection (PostgreSQL only)     | `false`        | No                         |
-| `--save`     |       | Save connection configuration            | `true`         | No                         |
-| `--test`     |       | Test connection without saving           | `false`        | No                         |
-| `--verbose`  |       | Enable verbose logging from `pg_restore` | `false`        | No                         |
+| Option       | Alias | Description                                           | Default        | Required (non-interactive)   |
+| ------------ | ----- | ----------------------------------------------------- | -------------- | ---------------------------- |
+| `--url`      | `-U`  | Database URL (e.g., `postgresql://user:pass@host/db`) | -              | No                           |
+| `--type`     |       | Database type (e.g., `postgresql`)                    | `postgresql`   | No                           |
+| `--name`     | `-n`  | Connection name for saving                            | auto-generated | No                           |
+| `--host`     | `-H`  | Database host (not for SQLite)                        | `localhost`    | No                           |
+| `--port`     | `-p`  | Database port (not for SQLite)                        | `5432`         | No                           |
+| `--user`     | `-u`  | Database username (not for SQLite)                    | -              | **Yes** (unless using --url) |
+| `--password` | `-w`  | Database password                                     | prompt         | No                           |
+| `--database` | `-d`  | Database name (not for SQLite)                        | -              | **Yes** (unless using --url) |
+| `--file`     |       | File path for SQLite connection                       | -              | **Yes** (for SQLite)         |
+| `--ssl`      |       | Use SSL connection (PostgreSQL only)                  | `false`        | No                           |
+| `--save`     |       | Save connection configuration                         | `true`         | No                           |
+| `--test`     |       | Test connection without saving                        | `false`        | No                           |
+| `--verbose`  |       | Enable verbose logging from `pg_restore`              | `false`        | No                           |
 
 ### `dbmux list [options]`
 
@@ -350,22 +354,40 @@ DBMux stores configuration in `~/.dbmux/config.json`. Each connection now has a 
 ```
 src/
 ├── commands/          # Command implementations
+│   ├── config/        # Configuration subcommands
+│   │   ├── add.ts     # Add new connections
+│   │   ├── default.ts # Set default connection
+│   │   ├── list.ts    # List saved connections
+│   │   ├── manage.ts  # Interactive connection management
+│   │   ├── path.ts    # Show config path
+│   │   ├── remove.ts  # Remove connections
+│   │   ├── rename.ts  # Rename connections
+│   │   └── show.ts    # Show config contents
+│   ├── config.ts      # Configuration management
 │   ├── connect.ts     # Database connection logic
+│   ├── disconnect.ts  # Clear active connection
 │   ├── dump.ts        # Database dump operations (pg_dump)
-│   ├── restore.ts     # Database restore operations (pg_restore)
 │   ├── list.ts        # List databases/tables/connections
 │   ├── query.ts       # SQL query execution
-│   └── config.ts      # Configuration management
+│   ├── restore.ts     # Database restore operations (pg_restore)
+│   └── status.ts      # Show connection status
 ├── db-drivers/        # Database-specific implementations
-│   ├── database-driver.ts
-│   └── postgres-driver.ts
+│   ├── database-driver.ts   # Driver interface
+│   ├── driver-factory.ts    # Driver creation
+│   └── postgres-driver.ts   # PostgreSQL implementation
 ├── types/             # TypeScript type definitions
 │   └── database.ts    # Database-related types
 ├── utils/             # Utility functions
-│   ├── config.ts      # Configuration file management
-│   ├── database.ts    # PostgreSQL connection utilities
-│   ├── dump-restore.ts # Dump & restore utility functions
-│   └── logger.ts      # Colored logging utilities
+│   ├── command-check.ts     # External command validation
+│   ├── command-runner.ts    # Command execution utilities
+│   ├── config.ts            # Configuration file management
+│   ├── constants.ts         # Application constants
+│   ├── database.ts          # Database connection utilities
+│   ├── dump-restore.ts      # Dump & restore utility functions
+│   ├── general.ts           # General utility functions
+│   ├── logger.ts            # Colored logging utilities
+│   ├── prompt.ts            # Interactive prompts and URL parsing
+│   └── session.ts           # Session management
 └── index.ts           # Main CLI entry point (BroCLI)
 .
 ├── .cursorules        # Your custom rules for the assistant

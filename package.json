@@ -1,6 +1,6 @@
 {
     "name": "dbmux",
-    "version": "1.0.4",
+    "version": "2.0.0",
     "description": "A flexible database management CLI tool with persistent configuration",
     "type": "module",
     "main": "dist/index.js",
@@ -21,20 +21,30 @@
     },
     "homepage": "https://github.com/bhagyamudgal/dbmux#readme",
     "scripts": {
-        "dev": "tsx src/index.ts",
-        "dev:watch": "tsx watch src/index.ts",
-        "build": "tsc -p tsconfig.build.json",
-        "start": "node dist/index.js",
+        "dev": "bun src/index.ts",
+        "dev:watch": "bun --watch src/index.ts",
+        "build": "bun build src/index.ts --outdir dist --target node && chmod +x dist/index.js",
+        "build:ts": "tsc -p tsconfig.build.json && chmod +x dist/index.js",
+        "start": "bun dist/index.js",
         "clean": "rm -rf dist",
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "lint": "eslint . --ext .ts",
         "format:check": "prettier --check .",
         "format": "prettier --write .",
-        "prepublishOnly": "pnpm run clean && pnpm run build",
+        "prepublishOnly": "bun run clean && bun run build",
+        "postinstall": "test -f ./dist/index.js && chmod +x ./dist/index.js || true",
+        "build:binary": "mkdir -p binaries && bun build src/index.ts --compile --outfile binaries/dbmux",
+        "build:linux": "mkdir -p binaries && bun build src/index.ts --compile --target=bun-linux-x64 --outfile binaries/dbmux-linux-x64",
+        "build:macos-intel": "mkdir -p binaries && bun build src/index.ts --compile --target=bun-darwin-x64 --outfile binaries/dbmux-darwin-x64",
+        "build:macos-arm": "mkdir -p binaries && bun build src/index.ts --compile --target=bun-darwin-arm64 --outfile binaries/dbmux-darwin-arm64",
+        "build:windows": "mkdir -p binaries && bun build src/index.ts --compile --target=bun-windows-x64 --outfile binaries/dbmux-windows-x64.exe",
+        "build:binaries": "bun run build:linux && bun run build:macos-intel && bun run build:macos-arm && bun run build:windows",
         "test": "vitest run",
         "test:watch": "vitest --watch",
+        "test:bun": "bun test",
         "coverage": "vitest run --coverage",
-        "prepare": "husky"
+        "prepare": "husky",
+        "release": "./release.sh"
     },
     "keywords": [
         "cli",
@@ -49,10 +59,8 @@
     ],
     "author": "",
     "license": "MIT",
-    "packageManager": "pnpm@10.12.4",
     "engines": {
-        "node": ">=22.0.0",
-        "pnpm": ">=10.0.0"
+        "node": ">=22.0.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",
@@ -69,7 +77,6 @@
         "lint-staged": "^16.1.2",
         "prettier": "^3.6.2",
         "ts-mockito": "^2.6.1",
-        "tsx": "^4.20.3",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.35.1",
         "vitest": "^3.2.4"

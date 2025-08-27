@@ -26,9 +26,19 @@ type PackageJson = {
 };
 
 function getPackageInfo(): PackageJson {
-    const packagePath = join(__dirname, "..", "package.json");
-    const packageContent = readFileSync(packagePath, "utf-8");
-    return JSON.parse(packageContent) as PackageJson;
+    try {
+        const packagePath = join(__dirname, "..", "package.json");
+        const packageContent = readFileSync(packagePath, "utf-8");
+        return JSON.parse(packageContent) as PackageJson;
+    } catch (error) {
+        // Fallback for compiled binaries where file system paths don't work
+        return {
+            name: "dbmux",
+            version: "2.0.0",
+            description:
+                "A flexible database management CLI tool with persistent configuration",
+        };
+    }
 }
 
 // Define commands
@@ -37,6 +47,7 @@ const connectCommand = command({
     desc: "Connect to a PostgreSQL database and save configuration",
     options: {
         name: string().alias("n"),
+        url: string().alias("U"),
         host: string().alias("H"),
         port: number().min(1).max(65535).alias("p"),
         user: string().alias("u"),
@@ -212,11 +223,15 @@ async function main(): Promise<void> {
     });
 }
 
-// Only run if this is the main module
-if (
+// Run if this is the main module or compiled binary
+// For Bun compiled binaries, the path will be in /$bunfs/root/
+const isMainModule =
     import.meta.url.startsWith("file://") &&
-    process.argv[1] === fileURLToPath(import.meta.url)
-) {
+    (process.argv[1] === fileURLToPath(import.meta.url) ||
+        process.argv[1]?.includes("/$bunfs/root/") ||
+        import.meta.url.includes("/$bunfs/root/"));
+
+if (isMainModule) {
     main().catch((error) => {
         logger.fail(error instanceof Error ? error.message : String(error));
         process.exit(1);
