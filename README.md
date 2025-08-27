@@ -86,8 +86,8 @@ bun add -g dbmux
 git clone https://github.com/bhagyamudgal/dbmux.git
 cd dbmux
 bun install
-bun build
-npm link
+bun run build
+bun link
 ```
 
 ## Development
@@ -354,22 +354,40 @@ DBMux stores configuration in `~/.dbmux/config.json`. Each connection now has a 
 ```
 src/
 ├── commands/          # Command implementations
+│   ├── config/        # Configuration subcommands
+│   │   ├── add.ts     # Add new connections
+│   │   ├── default.ts # Set default connection
+│   │   ├── list.ts    # List saved connections
+│   │   ├── manage.ts  # Interactive connection management
+│   │   ├── path.ts    # Show config path
+│   │   ├── remove.ts  # Remove connections
+│   │   ├── rename.ts  # Rename connections
+│   │   └── show.ts    # Show config contents
+│   ├── config.ts      # Configuration management
 │   ├── connect.ts     # Database connection logic
+│   ├── disconnect.ts  # Clear active connection
 │   ├── dump.ts        # Database dump operations (pg_dump)
-│   ├── restore.ts     # Database restore operations (pg_restore)
 │   ├── list.ts        # List databases/tables/connections
 │   ├── query.ts       # SQL query execution
-│   └── config.ts      # Configuration management
+│   ├── restore.ts     # Database restore operations (pg_restore)
+│   └── status.ts      # Show connection status
 ├── db-drivers/        # Database-specific implementations
-│   ├── database-driver.ts
-│   └── postgres-driver.ts
+│   ├── database-driver.ts   # Driver interface
+│   ├── driver-factory.ts    # Driver creation
+│   └── postgres-driver.ts   # PostgreSQL implementation
 ├── types/             # TypeScript type definitions
 │   └── database.ts    # Database-related types
 ├── utils/             # Utility functions
-│   ├── config.ts      # Configuration file management
-│   ├── database.ts    # PostgreSQL connection utilities
-│   ├── dump-restore.ts # Dump & restore utility functions
-│   └── logger.ts      # Colored logging utilities
+│   ├── command-check.ts     # External command validation
+│   ├── command-runner.ts    # Command execution utilities
+│   ├── config.ts            # Configuration file management
+│   ├── constants.ts         # Application constants
+│   ├── database.ts          # Database connection utilities
+│   ├── dump-restore.ts      # Dump & restore utility functions
+│   ├── general.ts           # General utility functions
+│   ├── logger.ts            # Colored logging utilities
+│   ├── prompt.ts            # Interactive prompts and URL parsing
+│   └── session.ts           # Session management
 └── index.ts           # Main CLI entry point (BroCLI)
 .
 ├── .cursorules        # Your custom rules for the assistant
