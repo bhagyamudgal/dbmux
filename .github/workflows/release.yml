@@ -1,0 +1,149 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*"
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-release:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v1
+              with:
+                  bun-version: latest
+
+            - name: Setup Node.js for npm publishing
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Install dependencies
+              run: bun install
+
+            - name: Build for npm
+              run: bun run build
+
+            - name: Publish to npm
+              run: npm publish
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Build cross-platform binaries
+              run: |
+                  mkdir -p binaries
+                  bun build src/index.ts --compile --target=bun-linux-x64 --outfile binaries/dbmux-linux-x64
+                  bun build src/index.ts --compile --target=bun-darwin-x64 --outfile binaries/dbmux-darwin-x64
+                  bun build src/index.ts --compile --target=bun-darwin-arm64 --outfile binaries/dbmux-darwin-arm64
+                  bun build src/index.ts --compile --target=bun-windows-x64 --outfile binaries/dbmux-windows-x64.exe
+
+            - name: Create checksums
+              run: |
+                  cd binaries
+                  sha256sum * > checksums.txt
+                  cat checksums.txt
+
+            - name: Get version from tag
+              id: get_version
+              run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ github.ref }}
+                  release_name: Release ${{ steps.get_version.outputs.VERSION }}
+                  body: |
+                      ## DBMux ${{ steps.get_version.outputs.VERSION }}
+
+                      ### Download Binaries
+
+                      Choose the appropriate binary for your platform:
+
+                      - **Linux (x64)**: `dbmux-linux-x64`
+                      - **macOS (Intel)**: `dbmux-darwin-x64`
+                      - **macOS (Apple Silicon)**: `dbmux-darwin-arm64`
+                      - **Windows (x64)**: `dbmux-windows-x64.exe`
+
+                      ### Installation
+
+                      1. Download the appropriate binary for your platform
+                      2. Make it executable (Linux/macOS): `chmod +x dbmux-*`
+                      3. Move to your PATH: `sudo mv dbmux-* /usr/local/bin/dbmux`
+                      4. Run: `dbmux --help`
+
+                      ### NPM Installation
+
+                      Alternatively, install via npm:
+                      ```bash
+                      npm install -g dbmux
+                      # or
+                      bun add -g dbmux
+                      ```
+
+                      ### Verification
+
+                      You can verify the downloads using the checksums provided in `checksums.txt`.
+                  draft: false
+                  prerelease: false
+
+            - name: Upload Linux Binary
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: binaries/dbmux-linux-x64
+                  asset_name: dbmux-linux-x64
+                  asset_content_type: application/octet-stream
+
+            - name: Upload macOS Intel Binary
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: binaries/dbmux-darwin-x64
+                  asset_name: dbmux-darwin-x64
+                  asset_content_type: application/octet-stream
+
+            - name: Upload macOS ARM64 Binary
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: binaries/dbmux-darwin-arm64
+                  asset_name: dbmux-darwin-arm64
+                  asset_content_type: application/octet-stream
+
+            - name: Upload Windows Binary
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: binaries/dbmux-windows-x64.exe
+                  asset_name: dbmux-windows-x64.exe
+                  asset_content_type: application/octet-stream
+
+            - name: Upload Checksums
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: binaries/checksums.txt
+                  asset_name: checksums.txt
+                  asset_content_type: text/plain
