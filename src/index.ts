@@ -37,6 +37,7 @@ const connectCommand = command({
     desc: "Connect to a PostgreSQL database and save configuration",
     options: {
         name: string().alias("n"),
+        url: string().alias("U"),
         host: string().alias("H"),
         port: number().min(1).max(65535).alias("p"),
         user: string().alias("u"),
