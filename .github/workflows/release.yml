@@ -18,11 +18,11 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Setup Bun
-              uses: oven-sh/setup-bun@v1
+              uses: oven-sh/setup-bun@v2
               with:
                   bun-version: latest
 
-            - name: Setup Bun for building
+            - name: Install dependencies
               run: bun install
 
             - name: Build cross-platform binaries
@@ -44,13 +44,10 @@ jobs:
               run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
             - name: Create Release
-              id: create_release
-              uses: actions/create-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              uses: softprops/action-gh-release@v2
               with:
-                  tag_name: ${{ github.ref }}
-                  release_name: Release ${{ steps.get_version.outputs.VERSION }}
+                  tag_name: ${{ github.ref_name }}
+                  name: Release ${{ steps.get_version.outputs.VERSION }}
                   body: |
                       ## DBMux ${{ steps.get_version.outputs.VERSION }}
 
@@ -84,53 +81,9 @@ jobs:
                       You can verify the downloads using the checksums provided in `checksums.txt`.
                   draft: false
                   prerelease: false
-
-            - name: Upload Linux Binary
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: binaries/dbmux-linux-x64
-                  asset_name: dbmux-linux-x64
-                  asset_content_type: application/octet-stream
-
-            - name: Upload macOS Intel Binary
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: binaries/dbmux-darwin-x64
-                  asset_name: dbmux-darwin-x64
-                  asset_content_type: application/octet-stream
-
-            - name: Upload macOS ARM64 Binary
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: binaries/dbmux-darwin-arm64
-                  asset_name: dbmux-darwin-arm64
-                  asset_content_type: application/octet-stream
-
-            - name: Upload Windows Binary
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: binaries/dbmux-windows-x64.exe
-                  asset_name: dbmux-windows-x64.exe
-                  asset_content_type: application/octet-stream
-
-            - name: Upload Checksums
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: binaries/checksums.txt
-                  asset_name: checksums.txt
-                  asset_content_type: text/plain
+                  files: |
+                      binaries/dbmux-linux-x64
+                      binaries/dbmux-darwin-x64
+                      binaries/dbmux-darwin-arm64
+                      binaries/dbmux-windows-x64.exe
+                      binaries/checksums.txt
