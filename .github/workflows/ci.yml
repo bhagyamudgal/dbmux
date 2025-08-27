@@ -24,13 +24,13 @@ jobs:
               run: bun install --frozen-lockfile
 
             - name: Check formatting
-              run: bun format:check
+              run: bun run format:check
 
             - name: Lint code
-              run: bun lint
+              run: bun run lint
 
             - name: Build project
-              run: bun build
+              run: bun run build
 
             - name: Test
               run: bun run test

@@ -8,24 +8,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Package Manager**: Always use `bun` (v1.1.0+) - replaced pnpm for better performance and compatibility
 - **Install dependencies**: `bun install`
-- **Development**: `bun dev` (one-time run) or `bun dev:watch` (watch mode)
-- **Build**: `bun build` (builds to `dist/`)
+- **Development**: `bun run dev` (one-time run) or `bun run dev:watch` (watch mode)
+- **Build**: `bun run build` (builds to `dist/`)
 - **Test**: `bun run test` (run once), `bun run test:watch` (watch mode), `bun run coverage` (with coverage)
-- **Binary Build**: `bun build:binary` (creates executable), `bun build:linux` (cross-platform)
+- **Binary Build**: `bun run build:binary` (creates executable), `bun run build:linux` (cross-platform)
 
 ### Code Quality
 
-- **Type checking**: `bun typecheck` (required before commits)
-- **Linting**: `bun lint` (ESLint with TypeScript)
-- **Formatting**: `bun format` (write) or `bun format:check` (check only)
+- **Type checking**: `bun run typecheck` (required before commits)
+- **Linting**: `bun run lint` (ESLint with TypeScript)
+- **Formatting**: `bun run format` (write) or `bun run format:check` (check only)
 
 ### Build & Distribution
 
-- **Clean build**: `bun clean && bun build`
-- **Production start**: `bun start` (runs built CLI)
+- **Clean build**: `bun run clean && bun run build`
+- **Production start**: `bun run start` (runs built CLI)
 - **Link for testing**: `bun link` (after building)
-- **Binary compilation**: `bun build:binary` (single executable)
-- **Cross-platform binaries**: `bun build:linux`, `bun build:macos-arm64`, `bun build:windows`
+- **Binary compilation**: `bun run build:binary` (single executable)
+- **Cross-platform binaries**: `bun run build:linux`, `bun run build:macos-arm64`, `bun run build:windows`
 
 ## Architecture Overview
 

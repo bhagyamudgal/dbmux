@@ -99,20 +99,20 @@ The development setup includes TypeScript, ESLint for code quality, and Prettier
 bun install
 
 # Run in development mode (with hot reload)
-bun dev:watch
+bun run dev:watch
 
 # Build for production
-bun build
+bun run build
 
 # Type checking
-bun typecheck
+bun run typecheck
 
 # Linting
-bun lint
+bun run lint
 
 # Formatting
-bun format
-bun format:check
+bun run format
+bun run format:check
 ```
 
 ### Testing
