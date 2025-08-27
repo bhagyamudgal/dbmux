@@ -93,7 +93,14 @@ fi
 
 # Update package.json version
 echo "📝 Updating package.json version to $VERSION"
-bun version $VERSION --no-git-tag-version
+# Use node to update version since bun doesn't have version command
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+pkg.version = '$VERSION';
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 4) + '\n');
+console.log('✅ Version updated to $VERSION');
+"
 
 # Run tests and build
 echo "🧪 Running tests..."
