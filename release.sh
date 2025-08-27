@@ -122,8 +122,22 @@ cd ..
 
 echo "📋 Git operations..."
 git add package.json
-git commit -m "chore: bump version to $VERSION"
-git tag "v$VERSION"
+
+# Only commit if there are changes to commit
+if ! git diff --cached --quiet; then
+    git commit -m "chore: bump version to $VERSION"
+    echo "✅ Committed version bump"
+else
+    echo "ℹ️  Package.json already at version $VERSION, no commit needed"
+fi
+
+# Check if tag already exists
+if git tag --list | grep -q "^v$VERSION$"; then
+    echo "ℹ️  Tag v$VERSION already exists, skipping tag creation"
+else
+    git tag "v$VERSION"
+    echo "✅ Created tag v$VERSION"
+fi
 
 echo "✅ Release $VERSION prepared!"
 echo ""
