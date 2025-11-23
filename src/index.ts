@@ -204,7 +204,6 @@ const disconnectCommand = command({
 
 async function main(): Promise<void> {
     const packageInfo = getPackageInfo();
-
     const commands = [
         connectCommand,
         listCommand,
@@ -215,7 +214,6 @@ async function main(): Promise<void> {
         statusCommand,
         disconnectCommand,
     ];
-
     await run(commands, {
         name: packageInfo.name,
         description: packageInfo.description,
@@ -223,15 +221,26 @@ async function main(): Promise<void> {
     });
 }
 
-// Run if this is the main module or compiled binary
-// For Bun compiled binaries, the path will be in /$bunfs/root/
-const isMainModule =
-    import.meta.url.startsWith("file://") &&
-    (process.argv[1] === fileURLToPath(import.meta.url) ||
-        process.argv[1]?.includes("/$bunfs/root/") ||
-        import.meta.url.includes("/$bunfs/root/"));
+function isCliInvocation(): boolean {
+    if (!import.meta.url.startsWith("file://")) {
+        return false;
+    }
+    const scriptPath = fileURLToPath(import.meta.url);
+    if (!process.argv[1]) {
+        return false;
+    }
+    const normalizedArg = process.argv[1].replace(/\\/g, "/");
+    const isDirectExecution = process.argv[1] === scriptPath;
+    const isGlobalShim =
+        normalizedArg.endsWith("/dbmux") ||
+        normalizedArg.endsWith("/dbmux.cmd");
+    const isBunBundle =
+        normalizedArg.includes("/$bunfs/root/") ||
+        scriptPath.includes("/$bunfs/root/");
+    return isDirectExecution || isGlobalShim || isBunBundle;
+}
 
-if (isMainModule) {
+if (isCliInvocation()) {
     main().catch((error) => {
         logger.fail(error instanceof Error ? error.message : String(error));
         process.exit(1);
