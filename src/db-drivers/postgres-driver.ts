@@ -10,12 +10,14 @@ import type { DatabaseDriver } from "./database-driver.js";
 
 export class PostgresDriver implements DatabaseDriver {
     private pool: Pool | null = null;
+    private config: ConnectionConfig | null = null;
 
     async connect(config: ConnectionConfig): Promise<void> {
         if (this.pool) {
             await this.pool.end();
         }
 
+        this.config = config;
         this.pool = new Pool({
             host: config.host,
             port: config.port,
@@ -31,6 +33,63 @@ export class PostgresDriver implements DatabaseDriver {
         const client = await this.pool.connect();
         await client.query("SELECT 1");
         client.release();
+    }
+
+    private isValidUnquotedIdentifier(name: string): boolean {
+        const validPattern = /^[a-zA-Z_][a-zA-Z0-9_$]*$/;
+        return name.length > 0 && name.length <= 63 && validPattern.test(name);
+    }
+
+    private isValidQuotedIdentifier(name: string): boolean {
+        if (!name.startsWith('"') || !name.endsWith('"') || name.length < 3) {
+            return false;
+        }
+        const content = name.slice(1, -1);
+        const unescapedContent = content.replace(/""/g, "");
+        if (unescapedContent.includes('"')) {
+            return false;
+        }
+        const actualLength = content.replace(/""/g, '"').length;
+        return actualLength > 0 && actualLength <= 63;
+    }
+
+    private isValidDatabaseName(name: string): boolean {
+        return (
+            this.isValidUnquotedIdentifier(name) ||
+            this.isValidQuotedIdentifier(name)
+        );
+    }
+
+    private getUnquotedName(name: string): string {
+        if (name.startsWith('"') && name.endsWith('"')) {
+            return name.slice(1, -1).replace(/""/g, '"');
+        }
+        return name;
+    }
+
+    private formatAsIdentifier(name: string): string {
+        if (name.startsWith('"') && name.endsWith('"')) {
+            const content = name.slice(1, -1);
+            return `"${content.replace(/""/g, '"').replace(/"/g, '""')}"`;
+        }
+        return `"${name.replace(/"/g, '""')}"`;
+    }
+
+    private async createAdminClient(): Promise<Client> {
+        if (!this.config) {
+            throw new Error("No connection configuration available.");
+        }
+        const adminClient = new Client({
+            host: this.config.host,
+            port: this.config.port,
+            user: this.config.user,
+            password: this.config.password,
+            database: "postgres",
+            ssl: this.config.ssl ? { rejectUnauthorized: false } : false,
+            connectionTimeoutMillis: 10000,
+        });
+        await adminClient.connect();
+        return adminClient;
     }
 
     async disconnect(): Promise<void> {
@@ -169,5 +228,48 @@ export class PostgresDriver implements DatabaseDriver {
             columns,
             rowCount: parseInt(countResult.rows[0]?.count as string, 10) || 0,
         };
+    }
+
+    async terminateConnections(databaseName: string): Promise<void> {
+        if (!this.isValidDatabaseName(databaseName)) {
+            throw new Error(
+                `Invalid database name '${databaseName}'. Names must be valid PostgreSQL identifiers.`
+            );
+        }
+
+        const unquotedName = this.getUnquotedName(databaseName);
+        const adminClient = await this.createAdminClient();
+
+        try {
+            await adminClient.query(
+                `SELECT pg_terminate_backend(pid)
+                 FROM pg_stat_activity
+                 WHERE datname = $1 AND pid <> pg_backend_pid()`,
+                [unquotedName]
+            );
+        } finally {
+            await adminClient.end();
+        }
+    }
+
+    async dropDatabase(databaseName: string): Promise<void> {
+        if (!this.isValidDatabaseName(databaseName)) {
+            throw new Error(
+                `Invalid database name '${databaseName}'. Names must be valid PostgreSQL identifiers.`
+            );
+        }
+
+        const formattedIdentifier = this.formatAsIdentifier(databaseName);
+        const adminClient = await this.createAdminClient();
+
+        try {
+            // DROP DATABASE cannot use parameterized queries for the db name,
+            // but we've validated and properly escaped the identifier
+            await adminClient.query(
+                `DROP DATABASE IF EXISTS ${formattedIdentifier}`
+            );
+        } finally {
+            await adminClient.end();
+        }
     }
 }
