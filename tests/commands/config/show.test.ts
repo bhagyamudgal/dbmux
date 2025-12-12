@@ -31,6 +31,7 @@ describe("executeShowCommand", () => {
                 autoConnect: true,
                 queryTimeout: 10000,
             },
+            dumpHistory: [],
         };
         getConfigPath.mockReturnValue("/fake/path/to/config.json");
         loadConfig.mockReturnValue(mockConfig);
@@ -65,6 +66,7 @@ describe("executeShowCommand", () => {
                 autoConnect: false,
                 queryTimeout: 30000,
             },
+            dumpHistory: [],
         };
         getConfigPath.mockReturnValue("/fake/path/to/config.json");
         loadConfig.mockReturnValue(mockConfig);

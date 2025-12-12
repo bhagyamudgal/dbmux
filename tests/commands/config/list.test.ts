@@ -82,6 +82,7 @@ describe("executeListCommand", () => {
                 logLevel: "info",
                 queryTimeout: 30000,
             },
+            dumpHistory: [],
         };
 
         listConnections.mockReturnValue(connections);

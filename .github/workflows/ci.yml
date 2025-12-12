@@ -10,7 +10,7 @@ on:
 
 jobs:
     build:
-        name: Build, Lint, Format Check, and Test
+        name: Build, Lint, Type Check, and Test
         runs-on: ubuntu-latest
 
         steps:
@@ -28,6 +28,9 @@ jobs:
 
             - name: Lint code
               run: bun run lint
+
+            - name: Type check
+              run: bun run typecheck
 
             - name: Build project
               run: bun run build

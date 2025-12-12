@@ -30,6 +30,7 @@ describe("executeStatusCommand", () => {
             autoConnect: false,
             queryTimeout: 30000,
         },
+        dumpHistory: [],
     };
 
     beforeEach(() => {
