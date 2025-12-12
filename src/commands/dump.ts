@@ -1,13 +1,15 @@
 import { confirm, input, select } from "@inquirer/prompts";
 import type { DatabaseInfo } from "../types/database.js";
 import { ensureCommandsExist } from "../utils/command-check.js";
-import { getConnection } from "../utils/config.js";
+import { addDumpHistory, getConnection, loadConfig } from "../utils/config.js";
 import { connectToDatabase, getDatabases } from "../utils/database.js";
 import {
     createDatabaseDump,
     generateDumpFilename,
+    getDumpOutputPath,
 } from "../utils/dump-restore.js";
 import { logger } from "../utils/logger.js";
+import { getActiveConnection } from "../utils/session.js";
 
 export type DumpOptions = {
     database?: string;
@@ -105,16 +107,52 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             return;
         }
 
-        // Perform dump
-        const dumpPath = await createDatabaseDump(connection, {
-            database: selectedDatabase,
-            outputFile,
-            format: options.format || "custom",
-            verbose: options.verbose || false,
-        });
+        // Get connection name for history tracking
+        const config = loadConfig();
+        const activeConnectionName = getActiveConnection();
+        const connectionName =
+            options.connection ??
+            activeConnectionName ??
+            config.defaultConnection ??
+            "unknown";
 
-        logger.success("Dump completed successfully!");
-        logger.info(`File location: ${dumpPath}`);
+        // Perform dump
+        try {
+            const dumpResult = await createDatabaseDump(connection, {
+                database: selectedDatabase,
+                outputFile,
+                format: options.format || "custom",
+                verbose: options.verbose || false,
+            });
+
+            addDumpHistory({
+                operationType: "dump",
+                timestamp: new Date().toISOString(),
+                database: selectedDatabase,
+                connectionName,
+                filePath: dumpResult.path,
+                fileSize: dumpResult.size,
+                status: "success",
+            });
+
+            logger.success("Dump completed successfully!");
+            logger.info(`File location: ${dumpResult.path}`);
+        } catch (dumpError) {
+            addDumpHistory({
+                operationType: "dump",
+                timestamp: new Date().toISOString(),
+                database: selectedDatabase,
+                connectionName,
+                filePath: getDumpOutputPath(outputFile),
+                fileSize: 0,
+                status: "failed",
+                errorMessage:
+                    dumpError instanceof Error
+                        ? dumpError.message
+                        : String(dumpError),
+            });
+            throw dumpError;
+        }
     } catch (error) {
         logger.fail(`Dump failed: ${error}`);
         process.exit(1);

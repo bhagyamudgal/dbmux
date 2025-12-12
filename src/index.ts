@@ -9,8 +9,12 @@ import { logger } from "./utils/logger.js";
 // Import commands
 import { executeConfigCommand } from "./commands/config.js";
 import { executeConnectCommand } from "./commands/connect.js";
+import { executeDbCommand } from "./commands/db.js";
 import { executeDisconnectCommand } from "./commands/disconnect.js";
 import { executeDumpCommand } from "./commands/dump.js";
+import { executeDumpDeleteCommand } from "./commands/dump-delete.js";
+import { executeHistoryCommand } from "./commands/history.js";
+import { executeHistoryListCommand } from "./commands/history/list.js";
 import { executeListCommand } from "./commands/list.js";
 import { executeQueryCommand } from "./commands/query.js";
 import { executeRestoreCommand } from "./commands/restore.js";
@@ -91,32 +95,82 @@ const queryCommand = command({
 
 const dumpCommand = command({
     name: "dump",
-    desc: "Create a database dump from PostgreSQL",
-    options: {
-        database: string().alias("d"),
-        connection: string().alias("n"),
-        format: string()
-            .enum("custom", "plain", "directory", "tar")
-            .default("custom")
-            .alias("f"),
-        output: string().alias("o"),
-        verbose: boolean(),
-    },
-    handler: executeDumpCommand,
+    desc: "Database dump operations",
+    subcommands: [
+        command({
+            name: "create",
+            desc: "Create a database dump from PostgreSQL",
+            options: {
+                database: string().alias("d"),
+                connection: string().alias("n"),
+                format: string()
+                    .enum("custom", "plain", "directory", "tar")
+                    .default("custom")
+                    .alias("f"),
+                output: string().alias("o"),
+                verbose: boolean(),
+            },
+            handler: executeDumpCommand,
+        }),
+        command({
+            name: "delete",
+            desc: "Delete dump files from ~/.dbmux/dumps/",
+            options: {
+                file: string().alias("f"),
+                force: boolean().alias("F"),
+            },
+            handler: executeDumpDeleteCommand,
+        }),
+        command({
+            name: "history",
+            desc: "Show dump history",
+            options: {
+                limit: number().alias("l"),
+                format: string().enum("table", "json").alias("f"),
+            },
+            handler: (options) =>
+                executeHistoryListCommand({
+                    limit: options.limit,
+                    format: options.format as "table" | "json" | undefined,
+                    type: "dump",
+                }),
+        }),
+    ],
 });
 
 const restoreCommand = command({
     name: "restore",
-    desc: "Restore a database from a dump file",
-    options: {
-        file: string().alias("f"),
-        database: string().alias("d"),
-        connection: string().alias("n"),
-        create: boolean().alias("c"),
-        drop: boolean(),
-        verbose: boolean(),
-    },
-    handler: executeRestoreCommand,
+    desc: "Database restore operations",
+    subcommands: [
+        command({
+            name: "run",
+            desc: "Restore a database from a dump file",
+            options: {
+                file: string().alias("f"),
+                database: string().alias("d"),
+                connection: string().alias("n"),
+                create: boolean().alias("c"),
+                drop: boolean(),
+                verbose: boolean(),
+                fromHistory: boolean().alias("H"),
+            },
+            handler: executeRestoreCommand,
+        }),
+        command({
+            name: "history",
+            desc: "Show restore history",
+            options: {
+                limit: number().alias("l"),
+                format: string().enum("table", "json").alias("f"),
+            },
+            handler: (options) =>
+                executeHistoryListCommand({
+                    limit: options.limit,
+                    format: options.format as "table" | "json" | undefined,
+                    type: "restore",
+                }),
+        }),
+    ],
 });
 
 const configCommand = command({
@@ -202,6 +256,67 @@ const disconnectCommand = command({
     handler: executeDisconnectCommand,
 });
 
+const historyCommand = command({
+    name: "history",
+    desc: "View and manage dump/restore history",
+    subcommands: [
+        command({
+            name: "list",
+            desc: "List dump/restore history",
+            options: {
+                limit: number().alias("l"),
+                type: string().enum("dump", "restore").alias("t"),
+                format: string()
+                    .enum("table", "json")
+                    .default("table")
+                    .alias("f"),
+            },
+            handler: (options) =>
+                executeHistoryCommand({
+                    action: "list",
+                    limit: options.limit,
+                    type: options.type as "dump" | "restore" | undefined,
+                    format: options.format as "table" | "json",
+                }),
+        }),
+        command({
+            name: "clear",
+            desc: "Clear dump/restore history",
+            options: {
+                type: string().enum("dump", "restore").alias("t"),
+            },
+            handler: (options) =>
+                executeHistoryCommand({
+                    action: "clear",
+                    type: options.type as "dump" | "restore" | undefined,
+                }),
+        }),
+    ],
+});
+
+const dbCommand = command({
+    name: "db",
+    desc: "Database management commands",
+    subcommands: [
+        command({
+            name: "delete",
+            desc: "Delete (DROP) a database from the server",
+            options: {
+                database: string().alias("d"),
+                connection: string().alias("n"),
+                force: boolean().alias("F"),
+            },
+            handler: (options) =>
+                executeDbCommand({
+                    action: "delete",
+                    database: options.database,
+                    connection: options.connection,
+                    force: options.force,
+                }),
+        }),
+    ],
+});
+
 async function main(): Promise<void> {
     const packageInfo = getPackageInfo();
     const commands = [
@@ -213,6 +328,8 @@ async function main(): Promise<void> {
         configCommand,
         statusCommand,
         disconnectCommand,
+        historyCommand,
+        dbCommand,
     ];
     await run(commands, {
         name: packageInfo.name,

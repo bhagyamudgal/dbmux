@@ -9,6 +9,7 @@ export type ConnectionConfig = {
     database?: string;
     ssl?: boolean;
     filePath?: string; // For SQLite
+    lastConnectedAt?: string; // ISO timestamp of last connection
 };
 
 export type QueryResult = {
@@ -47,6 +48,24 @@ export type TableDetail = {
     rowCount: number;
 };
 
+export type OperationType = "dump" | "restore";
+
+export type OperationStatus = "success" | "failed";
+
+export type DumpHistoryEntry = {
+    id: string;
+    operationType: OperationType;
+    timestamp: string;
+    database: string;
+    connectionName: string;
+    filePath: string;
+    fileSize: number;
+    status: OperationStatus;
+    errorMessage?: string;
+    deleted?: boolean;
+    deletedAt?: string;
+};
+
 export type DBmuxConfig = {
     connections: Record<string, ConnectionConfig>;
     defaultConnection?: string;
@@ -55,4 +74,5 @@ export type DBmuxConfig = {
         autoConnect: boolean;
         queryTimeout: number;
     };
+    dumpHistory: DumpHistoryEntry[];
 };

@@ -1,7 +1,14 @@
 import { confirm, input, select } from "@inquirer/prompts";
 import fs from "fs";
+import type { DumpHistoryEntry } from "../types/database.js";
 import { ensureCommandsExist } from "../utils/command-check.js";
-import { getConnection } from "../utils/config.js";
+import {
+    addDumpHistory,
+    getConnection,
+    getSuccessfulDumps,
+    loadConfig,
+} from "../utils/config.js";
+import { DUMPS_DIR } from "../utils/constants.js";
 import { connectToDatabase, getDatabases } from "../utils/database.js";
 import {
     listDumpFiles,
@@ -11,6 +18,8 @@ import {
 } from "../utils/dump-restore.js";
 import { extractMessageFromError } from "../utils/general.js";
 import { logger } from "../utils/logger.js";
+import { getActiveConnection } from "../utils/session.js";
+import { basename, dirname } from "path";
 
 export type RestoreOptions = {
     file?: string;
@@ -19,7 +28,13 @@ export type RestoreOptions = {
     create?: boolean;
     drop?: boolean;
     verbose?: boolean;
+    fromHistory?: boolean;
 };
+
+function formatFileSize(bytes: number): string {
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(2)} MB`;
+}
 
 export async function executeRestoreCommand(
     options: RestoreOptions
@@ -60,27 +75,66 @@ export async function executeRestoreCommand(
 
         // Select dump file to restore
         let dumpFile: string;
-        if (options.file) {
+        let selectedHistoryEntry: DumpHistoryEntry | undefined;
+
+        if (options.fromHistory) {
+            const successfulDumps = getSuccessfulDumps(20);
+
+            if (successfulDumps.length === 0) {
+                logger.fail("No successful dumps found in history");
+                logger.info(
+                    "Run 'dbmux dump' to create a database backup first"
+                );
+                process.exit(1);
+            }
+
+            const selectedId = await select({
+                message: "Select dump from history:",
+                choices: successfulDumps.map((entry) => ({
+                    name: `${entry.database} - ${new Date(entry.timestamp).toLocaleString()} (${formatFileSize(entry.fileSize)})`,
+                    value: entry.id,
+                    description: `Connection: ${entry.connectionName} | File: ${basename(entry.filePath)}`,
+                })),
+            });
+
+            selectedHistoryEntry = successfulDumps.find(
+                (e) => e.id === selectedId
+            );
+            if (!selectedHistoryEntry) {
+                logger.fail("Selected history entry not found");
+                process.exit(1);
+            }
+
+            if (!fs.existsSync(selectedHistoryEntry.filePath)) {
+                logger.fail(
+                    `Dump file no longer exists: ${selectedHistoryEntry.filePath}`
+                );
+                process.exit(1);
+            }
+
+            dumpFile = selectedHistoryEntry.filePath;
+        } else if (options.file) {
             dumpFile = options.file;
         } else {
-            const dumpFiles = listDumpFiles();
+            const dumpsInDir = listDumpFiles(DUMPS_DIR);
+            const dumpsInCwd = listDumpFiles(process.cwd());
+            const allDumps = [...dumpsInDir, ...dumpsInCwd];
 
-            if (dumpFiles.length === 0) {
-                logger.fail("No dump files found in current directory");
+            if (allDumps.length === 0) {
+                logger.fail("No dump files found");
+                logger.info(`Checked: ${DUMPS_DIR} and ${process.cwd()}`);
                 logger.info(
-                    "Dump files should have extensions: .dump, .sql, .gz, .tar"
+                    "Dump files should have extensions: .dump, .dmp, .sql, .gz, .tar"
                 );
                 process.exit(1);
             }
 
             dumpFile = await select({
                 message: "Select dump file to restore:",
-                choices: dumpFiles.map((file: DumpFileInfo) => ({
-                    name: `${file.name} (${
-                        file.size
-                    }) - ${file.modified.toLocaleDateString()}`,
-                    value: file.name,
-                    description: `Modified: ${file.modified.toLocaleString()}`,
+                choices: allDumps.map((file: DumpFileInfo) => ({
+                    name: `${file.name} (${file.size}) - ${file.modified.toLocaleDateString()}`,
+                    value: file.path,
+                    description: `Location: ${dirname(file.path)}`,
                 })),
             });
         }
@@ -213,20 +267,57 @@ export async function executeRestoreCommand(
             return;
         }
 
-        // Perform restore
-        await restoreDatabase(connection, {
-            inputFile: dumpFile,
-            targetDatabase,
-            createDatabase,
-            dropExisting,
-            verbose: options.verbose || false,
-            isCustomFormat, // Pass the verification result to avoid duplicate check
-        });
+        // Get connection name for history tracking
+        const config = loadConfig();
+        const activeConnectionName = getActiveConnection();
+        const connectionName =
+            options.connection ??
+            activeConnectionName ??
+            config.defaultConnection ??
+            "unknown";
 
-        logger.success("Restore completed successfully!");
-        logger.info(
-            `Database '${targetDatabase}' has been restored from '${dumpFile}'`
-        );
+        // Perform restore
+        try {
+            await restoreDatabase(connection, {
+                inputFile: dumpFile,
+                targetDatabase,
+                createDatabase,
+                dropExisting,
+                verbose: options.verbose || false,
+                isCustomFormat,
+            });
+
+            const fileStats = fs.statSync(dumpFile);
+            addDumpHistory({
+                operationType: "restore",
+                timestamp: new Date().toISOString(),
+                database: targetDatabase,
+                connectionName,
+                filePath: dumpFile,
+                fileSize: fileStats.size,
+                status: "success",
+            });
+
+            logger.success("Restore completed successfully!");
+            logger.info(
+                `Database '${targetDatabase}' has been restored from '${basename(dumpFile)}'`
+            );
+        } catch (restoreError) {
+            addDumpHistory({
+                operationType: "restore",
+                timestamp: new Date().toISOString(),
+                database: targetDatabase,
+                connectionName,
+                filePath: dumpFile,
+                fileSize: 0,
+                status: "failed",
+                errorMessage:
+                    restoreError instanceof Error
+                        ? restoreError.message
+                        : String(restoreError),
+            });
+            throw restoreError;
+        }
     } catch (error) {
         logger.fail(
             `Restore failed: ${extractMessageFromError(error, "Unknown error")}`

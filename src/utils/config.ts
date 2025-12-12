@@ -1,6 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import type { ConnectionConfig, DBmuxConfig } from "../types/database.js";
+import type {
+    ConnectionConfig,
+    DBmuxConfig,
+    DumpHistoryEntry,
+    OperationType,
+} from "../types/database.js";
 import { logger } from "../utils/logger.js";
 import { CONFIG_DIR } from "./constants.js";
 import { getActiveConnection } from "./session.js";
@@ -14,6 +19,7 @@ const DEFAULT_CONFIG: DBmuxConfig = {
         autoConnect: false,
         queryTimeout: 30000,
     },
+    dumpHistory: [],
 };
 
 function ensureConfigDir(): void {
@@ -41,6 +47,7 @@ export function loadConfig(): DBmuxConfig {
                 ...DEFAULT_CONFIG.settings,
                 ...config.settings,
             },
+            dumpHistory: config.dumpHistory || [],
         };
     } catch (error) {
         logger.warn(
@@ -162,6 +169,40 @@ export function setDefaultConnection(name: string): void {
     saveConfig(config);
 }
 
+export function updateConnectionLastUsed(name: string): void {
+    const config = loadConfig();
+
+    if (!config.connections[name]) {
+        return;
+    }
+
+    config.connections[name]!.lastConnectedAt = new Date().toISOString();
+    saveConfig(config);
+}
+
+export function getConnectionsSortedByLastUsed(): Array<{
+    name: string;
+    config: ConnectionConfig;
+}> {
+    const config = loadConfig();
+    const connections = Object.entries(config.connections).map(
+        ([name, connConfig]) => ({
+            name,
+            config: connConfig,
+        })
+    );
+
+    return connections.sort((a, b) => {
+        const aTime = a.config.lastConnectedAt
+            ? new Date(a.config.lastConnectedAt).getTime()
+            : 0;
+        const bTime = b.config.lastConnectedAt
+            ? new Date(b.config.lastConnectedAt).getTime()
+            : 0;
+        return bTime - aTime;
+    });
+}
+
 export function updateSettings(
     settings: Partial<DBmuxConfig["settings"]>
 ): void {
@@ -172,4 +213,110 @@ export function updateSettings(
 
 export function getConfigPath(): string {
     return CONFIG_FILE;
+}
+
+function generateHistoryId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
+export function addDumpHistory(
+    entry: Omit<DumpHistoryEntry, "id">
+): DumpHistoryEntry {
+    const config = loadConfig();
+    const newEntry: DumpHistoryEntry = {
+        ...entry,
+        id: generateHistoryId(),
+    };
+    config.dumpHistory.unshift(newEntry);
+    saveConfig(config);
+    return newEntry;
+}
+
+export function getDumpHistory(options?: {
+    limit?: number;
+    operationType?: OperationType;
+}): DumpHistoryEntry[] {
+    const config = loadConfig();
+    let history = config.dumpHistory;
+
+    if (options?.operationType) {
+        history = history.filter(
+            (e) => e.operationType === options.operationType
+        );
+    }
+
+    if (options?.limit && options.limit > 0) {
+        history = history.slice(0, options.limit);
+    }
+
+    return history;
+}
+
+export function getDumpHistoryById(id: string): DumpHistoryEntry | undefined {
+    const config = loadConfig();
+    return config.dumpHistory.find((entry) => entry.id === id);
+}
+
+export function getDumpHistoryByFilePath(
+    filePath: string
+): DumpHistoryEntry | undefined {
+    const config = loadConfig();
+    return config.dumpHistory.find((entry) => entry.filePath === filePath);
+}
+
+export function clearDumpHistory(operationType?: OperationType): number {
+    const config = loadConfig();
+    const originalCount = config.dumpHistory.length;
+
+    if (operationType) {
+        config.dumpHistory = config.dumpHistory.filter(
+            (e) => e.operationType !== operationType
+        );
+    } else {
+        config.dumpHistory = [];
+    }
+
+    saveConfig(config);
+    return originalCount - config.dumpHistory.length;
+}
+
+export function getSuccessfulDumps(limit?: number): DumpHistoryEntry[] {
+    const allDumps = getDumpHistory({ operationType: "dump" });
+    const successfulDumps = allDumps.filter(
+        (e) => e.status === "success" && !e.deleted
+    );
+
+    if (limit !== undefined && limit > 0) {
+        return successfulDumps.slice(0, limit);
+    }
+
+    return successfulDumps;
+}
+
+export function markDumpAsDeleted(id: string): boolean {
+    const config = loadConfig();
+    const entry = config.dumpHistory.find((e) => e.id === id);
+
+    if (!entry) {
+        return false;
+    }
+
+    entry.deleted = true;
+    entry.deletedAt = new Date().toISOString();
+    saveConfig(config);
+    return true;
+}
+
+export function markDumpAsDeletedByFilePath(filePath: string): boolean {
+    const config = loadConfig();
+    const entry = config.dumpHistory.find((e) => e.filePath === filePath);
+
+    if (!entry) {
+        return false;
+    }
+
+    entry.deleted = true;
+    entry.deletedAt = new Date().toISOString();
+    saveConfig(config);
+    return true;
 }

@@ -13,4 +13,6 @@ export type DatabaseDriver = {
     getTables(schema?: string): Promise<string[]>;
     getTableInfo(tableName: string, schema?: string): Promise<TableDetail>;
     executeQuery(sql: string): Promise<QueryResult>;
+    terminateConnections(databaseName: string): Promise<void>;
+    dropDatabase(databaseName: string): Promise<void>;
 };
