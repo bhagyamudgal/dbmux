@@ -6,6 +6,7 @@ import { connectToDatabase, getDatabases } from "../utils/database.js";
 import {
     createDatabaseDump,
     generateDumpFilename,
+    getDumpOutputPath,
 } from "../utils/dump-restore.js";
 import { logger } from "../utils/logger.js";
 import { getActiveConnection } from "../utils/session.js";
@@ -142,7 +143,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
                 timestamp: new Date().toISOString(),
                 database: selectedDatabase,
                 connectionName,
-                filePath: outputFile,
+                filePath: getDumpOutputPath(outputFile),
                 fileSize: 0,
                 status: "failed",
                 errorMessage:
