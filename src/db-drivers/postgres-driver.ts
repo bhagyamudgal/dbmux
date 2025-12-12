@@ -35,9 +35,14 @@ export class PostgresDriver implements DatabaseDriver {
         client.release();
     }
 
-    private isValidUnquotedIdentifier(name: string): boolean {
-        const validPattern = /^[a-zA-Z_][a-zA-Z0-9_$]*$/;
-        return name.length > 0 && name.length <= 63 && validPattern.test(name);
+    private isValidUnquotedName(name: string): boolean {
+        // Accept any non-empty string up to 63 bytes without NUL characters
+        // This allows names like "my-db" returned by pg_database.datname
+        return (
+            name.length > 0 &&
+            Buffer.byteLength(name, "utf8") <= 63 &&
+            !name.includes("\0")
+        );
     }
 
     private isValidQuotedIdentifier(name: string): boolean {
@@ -49,15 +54,18 @@ export class PostgresDriver implements DatabaseDriver {
         if (unescapedContent.includes('"')) {
             return false;
         }
-        const actualLength = content.replace(/""/g, '"').length;
+        const actualLength = Buffer.byteLength(
+            content.replace(/""/g, '"'),
+            "utf8"
+        );
         return actualLength > 0 && actualLength <= 63;
     }
 
     private isValidDatabaseName(name: string): boolean {
-        return (
-            this.isValidUnquotedIdentifier(name) ||
-            this.isValidQuotedIdentifier(name)
-        );
+        if (name.startsWith('"') && name.endsWith('"')) {
+            return this.isValidQuotedIdentifier(name);
+        }
+        return this.isValidUnquotedName(name);
     }
 
     private getUnquotedName(name: string): string {
