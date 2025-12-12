@@ -1,7 +1,8 @@
 import { spawn } from "child_process";
-import { existsSync, readdirSync, statSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, statSync } from "fs";
 import { basename, extname, join } from "path";
 import type { ConnectionConfig } from "../types/database.js";
+import { DUMPS_DIR } from "./constants.js";
 import { logger } from "./logger.js";
 
 export type DumpOptions = {
@@ -29,6 +30,23 @@ export type DumpFileInfo = {
     isValid: boolean;
 };
 
+export type DumpResult = {
+    path: string;
+    size: number;
+};
+
+export function ensureDumpsDir(): string {
+    if (!existsSync(DUMPS_DIR)) {
+        mkdirSync(DUMPS_DIR, { recursive: true });
+    }
+    return DUMPS_DIR;
+}
+
+export function getDumpOutputPath(filename: string): string {
+    ensureDumpsDir();
+    return join(DUMPS_DIR, filename);
+}
+
 function generateTimestamp(): string {
     const now = new Date();
     return now
@@ -45,16 +63,9 @@ export function generateDumpFilename(
     const timestamp = generateTimestamp();
 
     if (customName) {
-        // Extract extension if present
         const ext = extname(customName);
         const nameWithoutExt = basename(customName, ext);
         const finalExt = ext || ".dump";
-
-        // Add timestamp if not already present
-        const datePrefix = timestamp.split("_")[0]!;
-        if (nameWithoutExt.includes(datePrefix)) {
-            return `${nameWithoutExt}${finalExt}`;
-        }
         return `${nameWithoutExt}_${timestamp}${finalExt}`;
     }
 
@@ -139,10 +150,10 @@ export async function executeCommandWithProgress(
 export async function createDatabaseDump(
     connection: ConnectionConfig,
     options: DumpOptions
-): Promise<string> {
+): Promise<DumpResult> {
     const outputFile =
         options.outputFile || generateDumpFilename(options.database);
-    const outputPath = join(process.cwd(), outputFile);
+    const outputPath = getDumpOutputPath(outputFile);
 
     logger.info(`Creating database dump for '${options.database}'`);
     logger.info(`Output file: ${outputFile}`);
@@ -183,7 +194,6 @@ export async function createDatabaseDump(
         throw new Error(`pg_dump failed: ${result.error}`);
     }
 
-    // Verify the dump file was created
     if (!existsSync(outputPath)) {
         throw new Error("Dump file was not created");
     }
@@ -195,7 +205,10 @@ export async function createDatabaseDump(
     logger.info(`File size: ${fileSizeMB} MB`);
     logger.info(`Location: ${outputPath}`);
 
-    return outputPath;
+    return {
+        path: outputPath,
+        size: stats.size,
+    };
 }
 
 export async function restoreDatabase(
@@ -423,20 +436,27 @@ export async function dropAndRecreateDatabase(
     await createDatabase(connection, databaseName);
 }
 
-export function listDumpFiles(
-    directory: string = process.cwd()
-): DumpFileInfo[] {
+export function listDumpFiles(directory?: string): DumpFileInfo[] {
+    const targetDir = directory || DUMPS_DIR;
+
+    if (!existsSync(targetDir)) {
+        if (targetDir === DUMPS_DIR) {
+            ensureDumpsDir();
+        }
+        return [];
+    }
+
     try {
-        const files = readdirSync(directory);
+        const files = readdirSync(targetDir);
         const dumpFiles: DumpFileInfo[] = [];
 
         for (const file of files) {
-            const filePath = join(directory, file);
+            const filePath = join(targetDir, file);
             const stats = statSync(filePath);
 
             if (stats.isFile()) {
                 const ext = extname(file).toLowerCase();
-                if ([".dump", ".sql", ".gz", ".tar"].includes(ext)) {
+                if ([".dump", ".dmp", ".sql", ".gz", ".tar"].includes(ext)) {
                     const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
 
                     dumpFiles.push({
@@ -444,7 +464,7 @@ export function listDumpFiles(
                         path: filePath,
                         size: `${sizeMB} MB`,
                         modified: stats.mtime,
-                        isValid: true, // We'll verify this when needed
+                        isValid: true,
                     });
                 }
             }

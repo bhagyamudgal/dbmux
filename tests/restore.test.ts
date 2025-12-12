@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { existsSync, statSync } from "fs";
 import {
     afterEach,
     beforeEach,
@@ -14,7 +14,19 @@ import { executeRestoreCommand } from "../src/commands/restore";
 const { ensureCommandsExist } = vi.hoisted(() => ({
     ensureCommandsExist: vi.fn(),
 }));
-const { getConnection } = vi.hoisted(() => ({ getConnection: vi.fn() }));
+const { getConnection, addDumpHistory, getSuccessfulDumps, loadConfig } =
+    vi.hoisted(() => ({
+        getConnection: vi.fn(),
+        addDumpHistory: vi.fn(),
+        getSuccessfulDumps: vi.fn(),
+        loadConfig: vi.fn(),
+    }));
+const { getActiveConnection } = vi.hoisted(() => ({
+    getActiveConnection: vi.fn(),
+}));
+const { DUMPS_DIR } = vi.hoisted(() => ({
+    DUMPS_DIR: "/mock/.dbmux/dumps",
+}));
 const { connectToDatabase, getDatabases } = vi.hoisted(() => ({
     connectToDatabase: vi.fn(),
     getDatabases: vi.fn(),
@@ -40,7 +52,14 @@ const { logger } = vi.hoisted(() => ({
 // Module Mocks
 vi.mock("fs");
 vi.mock("../src/utils/command-check.js", () => ({ ensureCommandsExist }));
-vi.mock("../src/utils/config.js", () => ({ getConnection }));
+vi.mock("../src/utils/config.js", () => ({
+    getConnection,
+    addDumpHistory,
+    getSuccessfulDumps,
+    loadConfig,
+}));
+vi.mock("../src/utils/session.js", () => ({ getActiveConnection }));
+vi.mock("../src/utils/constants.js", () => ({ DUMPS_DIR }));
 vi.mock("../src/utils/database.js", () => ({
     connectToDatabase,
     getDatabases,
@@ -59,12 +78,26 @@ describe("executeRestoreCommand", () => {
         ensureCommandsExist.mockReturnValue(true);
         getConnection.mockReturnValue({ type: "postgresql" });
         listDumpFiles.mockReturnValue([
-            { name: "test.dump", modified: new Date() },
+            {
+                name: "test.dump",
+                path: "/mock/.dbmux/dumps/test.dump",
+                modified: new Date(),
+            },
         ]);
         getDatabases.mockResolvedValue([{ name: "db1" }]);
+        loadConfig.mockReturnValue({
+            connections: {},
+            defaultConnection: "test",
+            settings: {},
+            dumpHistory: [],
+        });
+        getActiveConnection.mockReturnValue(null);
+        addDumpHistory.mockReturnValue({ id: "test-id" });
+        getSuccessfulDumps.mockReturnValue([]);
         confirm.mockResolvedValue(true);
-        select.mockResolvedValue("test.dump");
+        select.mockResolvedValue("/mock/.dbmux/dumps/test.dump");
         (existsSync as Mock).mockReturnValue(true);
+        (statSync as Mock).mockReturnValue({ size: 1024 });
     });
 
     afterEach(() => {
@@ -167,9 +200,7 @@ describe("executeRestoreCommand", () => {
             .mockImplementation((() => {}) as () => never);
         listDumpFiles.mockReturnValue([]);
         await executeRestoreCommand({});
-        expect(logger.fail).toHaveBeenCalledWith(
-            "No dump files found in current directory"
-        );
+        expect(logger.fail).toHaveBeenCalledWith("No dump files found");
         expect(processExit).toHaveBeenCalledWith(1);
     });
 

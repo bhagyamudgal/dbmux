@@ -1,10 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { executeConnectCommand } from "../src/commands/connect";
 
-const { getConnection, listConnections, addConnection } = vi.hoisted(() => ({
+const {
+    getConnection,
+    addConnection,
+    getConnectionsSortedByLastUsed,
+    updateConnectionLastUsed,
+} = vi.hoisted(() => ({
     getConnection: vi.fn(),
-    listConnections: vi.fn(),
     addConnection: vi.fn(),
+    getConnectionsSortedByLastUsed: vi.fn(),
+    updateConnectionLastUsed: vi.fn(),
 }));
 const { connectToDatabase, testConnection, closeConnection } = vi.hoisted(
     () => ({
@@ -35,8 +41,9 @@ const { logger } = vi.hoisted(() => ({
 
 vi.mock("../src/utils/config.js", () => ({
     getConnection,
-    listConnections,
     addConnection,
+    getConnectionsSortedByLastUsed,
+    updateConnectionLastUsed,
 }));
 vi.mock("../src/utils/database.js", () => ({
     connectToDatabase,
@@ -57,7 +64,9 @@ describe("executeConnectCommand", () => {
     beforeEach(() => {
         vi.resetAllMocks();
         testConnection.mockResolvedValue(true);
-        listConnections.mockReturnValue({ saved: mockSavedConfig });
+        getConnectionsSortedByLastUsed.mockReturnValue([
+            { name: "saved", config: mockSavedConfig },
+        ]);
         getConnection.mockReturnValue(mockSavedConfig);
         promptForConnectionDetails.mockResolvedValue(mockNewConfig);
     });

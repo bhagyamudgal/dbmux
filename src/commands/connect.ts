@@ -3,7 +3,8 @@ import type { ConnectionConfig, DatabaseType } from "../types/database.js";
 import {
     addConnection,
     getConnection,
-    listConnections,
+    getConnectionsSortedByLastUsed,
+    updateConnectionLastUsed,
 } from "../utils/config.js";
 import {
     closeConnection,
@@ -14,6 +15,24 @@ import { logger } from "../utils/logger.js";
 import { promptForConnectionDetails } from "../utils/prompt.js";
 import { setActiveConnection } from "../utils/session.js";
 import { getDriverDefaults } from "../db-drivers/driver-factory.js";
+
+function formatLastConnected(timestamp?: string): string {
+    if (!timestamp) return "never";
+
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return date.toLocaleDateString();
+}
 
 function parseDatabaseUrl(url: string): Partial<ConnectionConfig> {
     try {
@@ -185,6 +204,7 @@ export async function executeConnectCommand(options: ConnectOptions) {
             config = getConnection(options.name);
             logger.info(`Connecting to saved connection: ${options.name}`);
             setActiveConnection(options.name);
+            updateConnectionLastUsed(options.name);
         } catch (error) {
             if (error instanceof Error) {
                 logger.warn(
@@ -229,16 +249,15 @@ export async function executeConnectCommand(options: ConnectOptions) {
     }
 
     if (!config) {
-        const savedConnections = listConnections();
-        const savedConnectionNames = Object.keys(savedConnections);
+        const sortedConnections = getConnectionsSortedByLastUsed();
 
-        if (savedConnectionNames.length > 0) {
+        if (sortedConnections.length > 0) {
             const choice = await select({
                 message: "Choose a connection",
                 choices: [
-                    ...savedConnectionNames.map((name) => ({
-                        name,
-                        value: name,
+                    ...sortedConnections.map((conn) => ({
+                        name: `${conn.name} (${formatLastConnected(conn.config.lastConnectedAt)})`,
+                        value: conn.name,
                     })),
                     {
                         name: "Connect to a new, unsaved connection",
@@ -250,6 +269,7 @@ export async function executeConnectCommand(options: ConnectOptions) {
             if (choice !== "new") {
                 config = getConnection(choice);
                 setActiveConnection(choice);
+                updateConnectionLastUsed(choice);
             }
         }
     }
