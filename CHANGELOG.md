@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2025-12-12
+
+### Fixed
+
+- **Restore File Path Resolution**: `--file` flag now checks `~/.dbmux/dumps/` first, then falls back to current directory
+- **Restore Interactive Mode**: Now only lists files from `~/.dbmux/dumps/` instead of mixing with current directory
+- **Dump Custom Filename**: Custom names now correctly get timestamp and `.dump` extension appended (e.g., `mybackup` becomes `mybackup_2025-12-12_12-30-45.dump`)
+
 ## [2.1.0] - 2025-12-12
 
 ### Added

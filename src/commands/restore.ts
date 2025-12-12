@@ -19,7 +19,7 @@ import {
 import { extractMessageFromError } from "../utils/general.js";
 import { logger } from "../utils/logger.js";
 import { getActiveConnection } from "../utils/session.js";
-import { basename, dirname } from "path";
+import { basename, dirname, isAbsolute, join } from "path";
 
 export type RestoreOptions = {
     file?: string;
@@ -36,6 +36,24 @@ function formatFileSize(bytes: number): string {
     return `${mb.toFixed(2)} MB`;
 }
 
+function resolveDumpFilePath(filePath: string): string | null {
+    if (isAbsolute(filePath)) {
+        return fs.existsSync(filePath) ? filePath : null;
+    }
+
+    const dumpsPath = join(DUMPS_DIR, filePath);
+    if (fs.existsSync(dumpsPath)) {
+        return dumpsPath;
+    }
+
+    const cwdPath = join(process.cwd(), filePath);
+    if (fs.existsSync(cwdPath)) {
+        return cwdPath;
+    }
+
+    return null;
+}
+
 export async function executeRestoreCommand(
     options: RestoreOptions
 ): Promise<void> {
@@ -46,10 +64,15 @@ export async function executeRestoreCommand(
 
         logger.info("Starting database restore process...");
 
-        // Validate options
-        if (options.file && !fs.existsSync(options.file)) {
-            logger.fail(`Dump file not found: ${options.file}`);
-            process.exit(1);
+        // Validate and resolve file path
+        if (options.file) {
+            const resolved = resolveDumpFilePath(options.file);
+            if (!resolved) {
+                logger.fail(`Dump file not found: ${options.file}`);
+                logger.info(`Checked: ${DUMPS_DIR} and ${process.cwd()}`);
+                process.exit(1);
+            }
+            options.file = resolved;
         }
 
         // Get connection config
@@ -116,15 +139,16 @@ export async function executeRestoreCommand(
         } else if (options.file) {
             dumpFile = options.file;
         } else {
-            const dumpsInDir = listDumpFiles(DUMPS_DIR);
-            const dumpsInCwd = listDumpFiles(process.cwd());
-            const allDumps = [...dumpsInDir, ...dumpsInCwd];
+            const allDumps = listDumpFiles(DUMPS_DIR);
 
             if (allDumps.length === 0) {
                 logger.fail("No dump files found");
-                logger.info(`Checked: ${DUMPS_DIR} and ${process.cwd()}`);
+                logger.info(`Checked: ${DUMPS_DIR}`);
                 logger.info(
                     "Dump files should have extensions: .dump, .dmp, .sql, .gz, .tar"
+                );
+                logger.info(
+                    "Use --file <path> to specify a file from another location"
                 );
                 process.exit(1);
             }

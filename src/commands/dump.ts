@@ -80,20 +80,23 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             });
         }
 
-        // Get output filename
+        // Get output filename (always adds timestamp and .dump extension)
         let outputFile: string;
         if (options.output) {
-            outputFile = options.output;
+            outputFile = generateDumpFilename(selectedDatabase, options.output);
         } else {
             const defaultName = generateDumpFilename(selectedDatabase);
             logger.info(`Default filename: ${defaultName}`);
 
             const customName = await input({
-                message: "Enter custom filename (or press Enter for default):",
+                message:
+                    "Enter custom filename (or press Enter for default, timestamp will be added):",
                 default: "",
             });
 
-            outputFile = customName || defaultName;
+            outputFile = customName
+                ? generateDumpFilename(selectedDatabase, customName)
+                : defaultName;
         }
 
         // Confirm dump operation
