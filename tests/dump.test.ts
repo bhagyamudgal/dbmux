@@ -63,7 +63,14 @@ describe("executeDumpCommand", () => {
         ensureCommandsExist.mockReturnValue(true);
         getConnection.mockReturnValue(mockConnection);
         getDatabases.mockResolvedValue(mockDatabases);
-        generateDumpFilename.mockReturnValue("default_dump.sql");
+        generateDumpFilename.mockImplementation(
+            (_db: string, customName?: string) => {
+                if (customName) {
+                    return `${customName.replace(/\.[^.]+$/, "")}_2025-01-01_00-00-00${customName.includes(".") ? customName.slice(customName.lastIndexOf(".")) : ".dump"}`;
+                }
+                return "default_dump.sql";
+            }
+        );
         getDumpOutputPath.mockReturnValue("/path/to/dump.sql");
         createDatabaseDump.mockResolvedValue({
             path: "/path/to/dump.sql",
@@ -104,7 +111,7 @@ describe("executeDumpCommand", () => {
             mockConnection,
             expect.objectContaining({
                 database: "db1",
-                outputFile: "custom.sql",
+                outputFile: "custom_2025-01-01_00-00-00.sql",
             })
         );
         expect(logger.success).toHaveBeenCalledWith(
@@ -163,7 +170,7 @@ describe("executeDumpCommand", () => {
         expect(createDatabaseDump).toHaveBeenCalledWith(
             mockConnection,
             expect.objectContaining({
-                outputFile: "my_special_dump.sql",
+                outputFile: "my_special_dump_2025-01-01_00-00-00.sql",
             })
         );
     });
