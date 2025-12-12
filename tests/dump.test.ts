@@ -16,10 +16,12 @@ const { connectToDatabase, getDatabases } = vi.hoisted(() => ({
     connectToDatabase: vi.fn(),
     getDatabases: vi.fn(),
 }));
-const { createDatabaseDump, generateDumpFilename } = vi.hoisted(() => ({
-    createDatabaseDump: vi.fn(),
-    generateDumpFilename: vi.fn(),
-}));
+const { createDatabaseDump, generateDumpFilename, getDumpOutputPath } =
+    vi.hoisted(() => ({
+        createDatabaseDump: vi.fn(),
+        generateDumpFilename: vi.fn(),
+        getDumpOutputPath: vi.fn(),
+    }));
 const { confirm, input, select } = vi.hoisted(() => ({
     confirm: vi.fn(),
     input: vi.fn(),
@@ -47,6 +49,7 @@ vi.mock("../src/utils/database.js", () => ({
 vi.mock("../src/utils/dump-restore.js", () => ({
     createDatabaseDump,
     generateDumpFilename,
+    getDumpOutputPath,
 }));
 vi.mock("@inquirer/prompts", () => ({ confirm, input, select }));
 vi.mock("../src/utils/logger.js", () => ({ logger }));
@@ -61,6 +64,7 @@ describe("executeDumpCommand", () => {
         getConnection.mockReturnValue(mockConnection);
         getDatabases.mockResolvedValue(mockDatabases);
         generateDumpFilename.mockReturnValue("default_dump.sql");
+        getDumpOutputPath.mockReturnValue("/path/to/dump.sql");
         createDatabaseDump.mockResolvedValue({
             path: "/path/to/dump.sql",
             size: 1024,

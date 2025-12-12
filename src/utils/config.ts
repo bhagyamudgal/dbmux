@@ -281,15 +281,16 @@ export function clearDumpHistory(operationType?: OperationType): number {
 }
 
 export function getSuccessfulDumps(limit?: number): DumpHistoryEntry[] {
-    const options: { operationType: OperationType; limit?: number } = {
-        operationType: "dump",
-    };
-    if (limit !== undefined) {
-        options.limit = limit;
-    }
-    return getDumpHistory(options).filter(
+    const allDumps = getDumpHistory({ operationType: "dump" });
+    const successfulDumps = allDumps.filter(
         (e) => e.status === "success" && !e.deleted
     );
+
+    if (limit !== undefined && limit > 0) {
+        return successfulDumps.slice(0, limit);
+    }
+
+    return successfulDumps;
 }
 
 export function markDumpAsDeleted(id: string): boolean {

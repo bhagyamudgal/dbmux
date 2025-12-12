@@ -34,7 +34,6 @@ Always use bun as package manager
     - Avoid using any.
     - Create necessary types.
 - Use JSDoc to document public classes and methods.
-- Don't leave blank lines within a function.
 - One export per file.
 - Always use type instead of interface to declare types
 

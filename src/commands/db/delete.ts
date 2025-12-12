@@ -12,6 +12,21 @@ export type DbDeleteOptions = {
     force?: boolean;
 };
 
+function isValidDatabaseName(name: string): boolean {
+    // PostgreSQL identifiers: start with letter/underscore, contain only
+    // letters, digits, underscores, dollar signs. Max 63 characters.
+    const validPattern = /^[a-zA-Z_][a-zA-Z0-9_$]*$/;
+    return name.length > 0 && name.length <= 63 && validPattern.test(name);
+}
+
+function escapeStringLiteral(value: string): string {
+    return value.replace(/'/g, "''");
+}
+
+function escapeIdentifier(value: string): string {
+    return value.replace(/"/g, '""');
+}
+
 async function dropDatabase(
     connection: {
         host?: string;
@@ -21,10 +36,19 @@ async function dropDatabase(
     },
     databaseName: string
 ): Promise<void> {
+    if (!isValidDatabaseName(databaseName)) {
+        throw new Error(
+            `Invalid database name '${databaseName}'. Names must start with a letter or underscore, contain only letters, digits, underscores, or dollar signs, and be at most 63 characters.`
+        );
+    }
+
     const env: Record<string, string> = {};
     if (connection.password) {
         env.PGPASSWORD = connection.password;
     }
+
+    const escapedLiteral = escapeStringLiteral(databaseName);
+    const escapedIdentifier = escapeIdentifier(databaseName);
 
     logger.info("Terminating active connections...");
     const terminateArgs = [
@@ -37,7 +61,7 @@ async function dropDatabase(
         "--dbname",
         "postgres",
         "--command",
-        `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${databaseName}' AND pid <> pg_backend_pid();`,
+        `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${escapedLiteral}' AND pid <> pg_backend_pid();`,
     ];
 
     await executeCommand("psql", terminateArgs, env);
@@ -53,7 +77,7 @@ async function dropDatabase(
         "--dbname",
         "postgres",
         "--command",
-        `DROP DATABASE IF EXISTS "${databaseName}";`,
+        `DROP DATABASE IF EXISTS "${escapedIdentifier}";`,
     ];
 
     const dropResult = await executeCommand("psql", dropArgs, env);

@@ -442,8 +442,9 @@ export function listDumpFiles(directory?: string): DumpFileInfo[] {
     if (!existsSync(targetDir)) {
         if (targetDir === DUMPS_DIR) {
             ensureDumpsDir();
+        } else {
+            return [];
         }
-        return [];
     }
 
     try {
