@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.2] - 2025-12-17
+
+### Fixed
+
+- **Restore Path Resolution**: Fixed bug where restore command failed with "Dump file not found" when using absolute paths. Bun's `path.join()` behaves differently from Node.js, appending absolute paths instead of resetting to them.
+
 ## [2.1.1] - 2025-12-12
 
 ### Fixed

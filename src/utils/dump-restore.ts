@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import { existsSync, mkdirSync, readdirSync, statSync } from "fs";
-import { basename, extname, join } from "path";
+import { basename, extname, isAbsolute, join } from "path";
 import type { ConnectionConfig } from "../types/database.js";
 import { DUMPS_DIR } from "./constants.js";
 import { logger } from "./logger.js";
@@ -215,7 +215,9 @@ export async function restoreDatabase(
     connection: ConnectionConfig,
     options: RestoreOptions
 ): Promise<void> {
-    const inputPath = join(process.cwd(), options.inputFile);
+    const inputPath = isAbsolute(options.inputFile)
+        ? options.inputFile
+        : join(process.cwd(), options.inputFile);
 
     if (!existsSync(inputPath)) {
         throw new Error(`Dump file not found: ${options.inputFile}`);

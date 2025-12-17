@@ -1,6 +1,6 @@
 {
     "name": "dbmux",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "description": "A flexible database management CLI tool with persistent configuration",
     "type": "module",
     "main": "dist/index.js",
