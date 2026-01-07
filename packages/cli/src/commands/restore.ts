@@ -169,7 +169,7 @@ export async function executeRestoreCommand(
         try {
             isCustomFormat = await verifyDumpFile(dumpFile);
         } catch {
-            logger.fail(`Dump file verification failed.`);
+            logger.fail("Dump file verification failed.");
             process.exit(1);
         }
 

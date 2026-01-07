@@ -13,14 +13,8 @@ import type { QueryResult } from "@dbmux/types/database";
 
 // Mocks
 const { withDatabaseConnection } = vi.hoisted(() => ({
-    withDatabaseConnection: vi.fn(async (connection, callback, database) => {
-        try {
-            return await callback();
-        } catch (error) {
-            // This allows us to catch rejections from executeQuery
-            // and simulate the behavior of the real implementation
-            throw error;
-        }
+    withDatabaseConnection: vi.fn(async (_connection, callback, _database) => {
+        return await callback();
     }),
 }));
 const { executeQuery } = vi.hoisted(() => ({

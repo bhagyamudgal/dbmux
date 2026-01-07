@@ -34,7 +34,7 @@ function getPackageInfo(): PackageJson {
         const packagePath = join(__dirname, "..", "package.json");
         const packageContent = readFileSync(packagePath, "utf-8");
         return JSON.parse(packageContent) as PackageJson;
-    } catch (error) {
+    } catch (_error) {
         // Fallback for compiled binaries where file system paths don't work
         return {
             name: "dbmux",
