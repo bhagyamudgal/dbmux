@@ -1,7 +1,19 @@
-import { Github, Package } from "lucide-react";
+import { Github, Package, type LucideIcon } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
-const footerLinks = {
+type FooterLink = {
+    label: string;
+    href: string;
+    icon?: LucideIcon;
+};
+
+type FooterLinks = {
+    product: FooterLink[];
+    resources: FooterLink[];
+    connect: FooterLink[];
+};
+
+const footerLinks: FooterLinks = {
     product: [
         { label: "Features", href: "#features" },
         { label: "Installation", href: "#installation" },

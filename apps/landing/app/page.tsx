@@ -13,7 +13,7 @@ export default function Home() {
                 variant="grid"
                 mask="fade-edges"
                 size={48}
-                fill="rgba(128, 128, 128, 0.15)"
+                fill="var(--border)"
             />
             <Header />
             <main>

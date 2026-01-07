@@ -16,8 +16,8 @@ export function Installation() {
             await navigator.clipboard.writeText(INSTALL_COMMANDS[method]);
             setCopied(method);
             setTimeout(() => setCopied(null), 2000);
-        } catch {
-            console.error("Failed to copy to clipboard");
+        } catch (err) {
+            console.error("Failed to copy to clipboard:", err);
         }
     }
 
