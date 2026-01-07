@@ -38,7 +38,7 @@ function getPackageInfo(): PackageJson {
         // Fallback for compiled binaries where file system paths don't work
         return {
             name: "dbmux",
-            version: "2.0.0",
+            version: "2.2.0",
             description:
                 "A flexible database management CLI tool with persistent configuration",
         };

@@ -10,7 +10,8 @@ permissions:
     id-token: write
 
 jobs:
-    build-and-release:
+    release:
+        name: Build, Publish, and Release
         runs-on: ubuntu-latest
 
         steps:
@@ -22,20 +23,28 @@ jobs:
               with:
                   bun-version: latest
 
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
+
             - name: Install dependencies
-              run: bun install
+              run: bun install --frozen-lockfile
 
             - name: Build project
               run: bun run build
 
             - name: Build cross-platform binaries
-              run: |
-                  cd packages/cli
-                  mkdir -p binaries
-                  bun build src/index.ts --compile --target=bun-linux-x64 --outfile binaries/dbmux-linux-x64
-                  bun build src/index.ts --compile --target=bun-darwin-x64 --outfile binaries/dbmux-darwin-x64
-                  bun build src/index.ts --compile --target=bun-darwin-arm64 --outfile binaries/dbmux-darwin-arm64
-                  bun build src/index.ts --compile --target=bun-windows-x64 --outfile binaries/dbmux-windows-x64.exe
+              run: bun run build:binaries
 
             - name: Create checksums
               run: |
@@ -47,7 +56,11 @@ jobs:
               id: get_version
               run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-            - name: Create Release
+            - name: Publish to npm (Trusted Publishing)
+              run: npm publish --provenance --access public
+              working-directory: packages/cli
+
+            - name: Create GitHub Release
               uses: softprops/action-gh-release@v2
               with:
                   tag_name: ${{ github.ref_name }}
@@ -55,34 +68,39 @@ jobs:
                   body: |
                       ## DBMux ${{ steps.get_version.outputs.VERSION }}
 
-                      ### Download Binaries
-
-                      Choose the appropriate binary for your platform:
-
-                      - **Linux (x64)**: `dbmux-linux-x64`
-                      - **macOS (Intel)**: `dbmux-darwin-x64`
-                      - **macOS (Apple Silicon)**: `dbmux-darwin-arm64`
-                      - **Windows (x64)**: `dbmux-windows-x64.exe`
-
                       ### Installation
 
-                      1. Download the appropriate binary for your platform
-                      2. Make it executable (Linux/macOS): `chmod +x dbmux-*`
-                      3. Move to your PATH: `sudo mv dbmux-* /usr/local/bin/dbmux`
-                      4. Run: `dbmux --help`
+                      **Quick Install (Recommended):**
+                      ```bash
+                      curl -fsSL https://raw.githubusercontent.com/bhagyamudgal/dbmux/main/install.sh | bash
+                      ```
 
-                      ### NPM Installation
-
-                      Alternatively, install via npm:
+                      **Via npm:**
                       ```bash
                       npm install -g dbmux
                       # or
                       bun add -g dbmux
                       ```
 
+                      **Via Binary Download:**
+
+                      | Platform | Binary |
+                      |----------|--------|
+                      | Linux (x64) | `dbmux-linux-x64` |
+                      | macOS (Intel) | `dbmux-darwin-x64` |
+                      | macOS (Apple Silicon) | `dbmux-darwin-arm64` |
+                      | Windows (x64) | `dbmux-windows-x64.exe` |
+
+                      ```bash
+                      # Linux/macOS
+                      chmod +x dbmux-*
+                      sudo mv dbmux-* /usr/local/bin/dbmux
+                      dbmux --help
+                      ```
+
                       ### Verification
 
-                      You can verify the downloads using the checksums provided in `checksums.txt`.
+                      Verify downloads using `checksums.txt` (SHA256).
                   draft: false
                   prerelease: false
                   files: |

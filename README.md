@@ -39,6 +39,16 @@ dbmux/
 
 ## Installation
 
+### Quick Install (Recommended)
+
+Install dbmux with a single command - no Node.js or npm required:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bhagyamudgal/dbmux/main/install.sh | bash
+```
+
+This automatically detects your platform and installs the latest binary.
+
 ### From npm
 
 ```bash
@@ -47,7 +57,18 @@ npm install -g dbmux
 bun add -g dbmux
 ```
 
-### From source
+### Pre-built Binaries
+
+Download platform-specific binaries from [GitHub Releases](https://github.com/bhagyamudgal/dbmux/releases):
+
+| Platform              | Binary                  |
+| --------------------- | ----------------------- |
+| Linux (x64)           | `dbmux-linux-x64`       |
+| macOS (Intel)         | `dbmux-darwin-x64`      |
+| macOS (Apple Silicon) | `dbmux-darwin-arm64`    |
+| Windows (x64)         | `dbmux-windows-x64.exe` |
+
+### From Source
 
 ```bash
 git clone https://github.com/bhagyamudgal/dbmux.git
@@ -56,15 +77,6 @@ bun install
 bun run build
 bun link
 ```
-
-### Pre-built Binaries
-
-Download platform-specific binaries from [GitHub Releases](https://github.com/bhagyamudgal/dbmux/releases):
-
-- **Linux (x64)**: `dbmux-linux-x64`
-- **macOS (Intel)**: `dbmux-darwin-x64`
-- **macOS (Apple Silicon)**: `dbmux-darwin-arm64`
-- **Windows (x64)**: `dbmux-windows-x64.exe`
 
 ## Quick Start
 
