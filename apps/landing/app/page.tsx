@@ -4,10 +4,17 @@ import { Hero } from "@/components/sections/hero";
 import { Features } from "@/components/sections/features";
 import { Installation } from "@/components/sections/installation";
 import { HowItWorks } from "@/components/sections/how-it-works";
+import { BGPattern } from "@/components/ui/bg-pattern";
 
 export default function Home() {
     return (
-        <div className="min-h-screen bg-background">
+        <div className="relative min-h-screen">
+            <BGPattern
+                variant="grid"
+                mask="fade-edges"
+                size={48}
+                fill="rgba(128, 128, 128, 0.15)"
+            />
             <Header />
             <main>
                 <Hero />
