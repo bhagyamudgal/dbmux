@@ -113,7 +113,9 @@ export function Footer() {
                                             rel="noopener noreferrer"
                                             className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                                         >
-                                            <link.icon className="h-4 w-4" />
+                                            {link.icon && (
+                                                <link.icon className="h-4 w-4" />
+                                            )}
                                             {link.label}
                                         </a>
                                     </li>
