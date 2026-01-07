@@ -1,0 +1,13 @@
+{
+    "name": "@dbmux/types",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts",
+        "./database": "./src/database.ts"
+    },
+    "devDependencies": {
+        "@dbmux/typescript-config": "workspace:*"
+    }
+}

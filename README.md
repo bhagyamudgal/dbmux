@@ -1,78 +1,45 @@
-# DBMux - Database Management CLI
+# dbmux - Database Management CLI
 
-A flexible, modern database management CLI tool built with TypeScript. It supports multiple database systems through a driver-based architecture, with PostgreSQL as the primary implementation.
+A flexible, modern database management CLI tool built with TypeScript and Bun. Supports multiple database systems through a driver-based architecture, with PostgreSQL as the primary implementation.
 
 ## Features
 
-- 🔮 **Multi-Database Support**: Easily extendable to support MySQL, SQLite, and more.
-- 🔗 **Connection Management**: Save and reuse database connections for any supported DB.
-- 🛡️ **Type-safe CLI**: Built with [brocli](https://github.com/drizzle-team/brocli) for robust argument parsing and validation.
-- 🗃️ **Persistent Config**: Connections saved to `~/.dbmux/config.json`.
-- 💾 **Database Backup & Restore**: Production-ready pg_dump and pg_restore (PostgreSQL only).
-- 🚀 **Modern Architecture**: ESM modules, strict TypeScript, and a clean, driver-based design.
+- **Multi-Database Support**: Easily extendable to support MySQL, SQLite, and more
+- **Connection Management**: Save and reuse database connections with URL or field-based input
+- **Type-safe CLI**: Built with [brocli](https://github.com/drizzle-team/brocli) for robust argument parsing
+- **Persistent Config**: Connections saved to `~/.dbmux/config.json`
+- **Database Backup & Restore**: Production-ready pg_dump and pg_restore with history tracking
+- **Database Operations**: Delete databases directly from CLI with safety confirmations
+- **Modern Architecture**: Turborepo monorepo, ESM modules, strict TypeScript
 
-## Architecture
+## Monorepo Structure
 
-DBMux is built on a driver-based architecture that makes it easy to extend and support multiple database systems. The core logic is decoupled from any specific database implementation, allowing for a flexible and scalable design.
+This project is organized as a Turborepo monorepo:
 
-- **`DatabaseDriver` Interface**: The contract for all database operations is defined in `src/db-drivers/database-driver.ts`. Any new database driver must implement this interface.
-- **Driver Implementations**: Each supported database has its own driver class (e.g., `PostgresDriver`) that contains the specific logic for that database.
-- **Driver Factory**: The `createDriver` function in `src/db-drivers/driver-factory.ts` is responsible for instantiating the correct driver based on the connection's `type`.
-
-### Extending DBMux (Adding a New Database)
-
-To add support for a new database (e.g., MySQL), follow these steps:
-
-1.  **Create the Driver**: Create a new file, `src/db-drivers/mysql-driver.ts`, and implement the `DatabaseDriver` interface.
-
-    ```typescript
-    // src/db-drivers/mysql-driver.ts
-    import type { DatabaseDriver } from "./database-driver.js";
-    // ... other imports
-
-    export class MySqlDriver implements DatabaseDriver {
-        // Implement all required methods:
-        // connect, disconnect, testConnection, getDatabases, etc.
-    }
-    ```
-
-2.  **Update the Factory**: Add the new driver to `src/db-drivers/driver-factory.ts`.
-
-    ```typescript
-    // src/db-drivers/driver-factory.ts
-    import { MySqlDriver } from "./mysql-driver.js";
-    // ...
-
-    export function createDriver(type: DatabaseType): DatabaseDriver {
-        switch (type) {
-            // ...
-            case "mysql":
-                return new MySqlDriver();
-            // ...
-        }
-    }
-    ```
-
-3.  **Update Types**: If needed, add the new database type to `DatabaseType` in `src/types/database.ts` and adjust `ConnectionConfig` for any specific connection options.
-
-4.  **Install Dependencies**: Install the required Node.js package for the new database.
-
-    ```bash
-    bun add mysql2
-    ```
+```
+dbmux/
+├── apps/
+│   └── web/                      # Next.js website (landing + docs)
+├── packages/
+│   ├── cli/                      # Main CLI (publishes as 'dbmux' on npm)
+│   ├── types/                    # @dbmux/types - shared type definitions
+│   ├── utils/                    # @dbmux/utils - shared utilities
+│   ├── typescript-config/        # @dbmux/typescript-config
+│   └── eslint-config/            # @dbmux/eslint-config
+├── turbo.json                    # Turborepo configuration
+├── package.json                  # Root workspace configuration
+└── bun.lock                      # Bun lockfile
+```
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
-
-- **Bun**: `v1.1.0` or higher
+- **Bun**: `v1.1.0` or higher (primary runtime and package manager)
 - **Node.js**: `v22.0.0` or higher (for npm distribution compatibility)
-
-This project uses Bun as the primary runtime and package manager for optimal performance.
+- **pg_dump/pg_restore**: Required for backup/restore operations (PostgreSQL only)
 
 ## Installation
 
-### From npm (when published)
+### From npm
 
 ```bash
 npm install -g dbmux
@@ -90,72 +57,79 @@ bun run build
 bun link
 ```
 
-## Development
+### Pre-built Binaries
 
-The development setup includes TypeScript, ESLint for code quality, and Prettier for formatting. To add support for a new database, you would create a new class that implements the `DatabaseDriver` interface in the `src/db-drivers` directory.
+Download platform-specific binaries from [GitHub Releases](https://github.com/bhagyamudgal/dbmux/releases):
 
-```bash
-# Install dependencies
-bun install
+- **Linux (x64)**: `dbmux-linux-x64`
+- **macOS (Intel)**: `dbmux-darwin-x64`
+- **macOS (Apple Silicon)**: `dbmux-darwin-arm64`
+- **Windows (x64)**: `dbmux-windows-x64.exe`
 
-# Run in development mode (with hot reload)
-bun run dev:watch
-
-# Build for production
-bun run build
-
-# Type checking
-bun run typecheck
-
-# Linting
-bun run lint
-
-# Formatting
-bun run format
-bun run format:check
-```
-
-### Testing
-
-This project uses [Vitest](https://vitest.dev/) for unit testing. The testing philosophy is to test each command in complete isolation by mocking its dependencies (like file system access and loggers). This ensures that tests are fast, reliable, and don't have side effects.
-
-Tests are located in the `tests/` directory and follow the naming convention `*.test.ts`.
+## Quick Start
 
 ```bash
-# Run the entire test suite once
-bun run test
+# Connect to a database using URL
+dbmux connect --url "postgresql://user:password@localhost:5432/mydb"
 
-# Run tests in watch mode
-bun run test:watch
+# Or connect interactively
+dbmux connect
 
-# Run tests and generate a coverage report
-bun run coverage
+# List databases
+dbmux list --databases
+
+# Execute a query
+dbmux query -q "SELECT * FROM users LIMIT 10"
+
+# Create a backup
+dbmux dump create -d mydb
+
+# Restore from backup
+dbmux restore run -f backup.dump -d mydb_copy --create
 ```
 
-## Usage
+## Commands Reference
 
-### Connect to a Database
+### `connect` - Connect to Database
 
-You can connect to any supported database by specifying the flags, or run the command without flags for an interactive setup. You can now use database URLs for quick connections.
+Connect to a database and optionally save the configuration.
 
 ```bash
 # Interactive mode (choose between URL or individual fields)
 dbmux connect
 
 # Using a database URL
-dbmux connect --url "postgresql://user:password@localhost:5432/mydb"
+dbmux connect --url "postgresql://user:password@localhost:5432/mydb?ssl=true"
 
-# Flag-based mode with individual parameters
-dbmux connect --type postgresql -n my-postgres -u postgres -d myapp_production
+# Using individual parameters
+dbmux connect --type postgresql -H localhost -p 5432 -u postgres -d myapp
+
+# Connect to a saved connection
+dbmux connect -n my-saved-connection
+
+# Test connection without saving
+dbmux connect --url "postgresql://..." --test
 ```
 
-### List Operations
+| Option       | Alias | Description                            | Default      |
+| ------------ | ----- | -------------------------------------- | ------------ |
+| `--url`      | `-U`  | Database URL                           | -            |
+| `--type`     |       | Database type (`postgresql`, `sqlite`) | `postgresql` |
+| `--name`     | `-n`  | Connection name for saving/loading     | auto-gen     |
+| `--host`     | `-H`  | Database host                          | `localhost`  |
+| `--port`     | `-p`  | Database port (1-65535)                | `5432`       |
+| `--user`     | `-u`  | Database username                      | -            |
+| `--password` | `-w`  | Database password                      | prompt       |
+| `--database` | `-d`  | Database name                          | -            |
+| `--ssl`      |       | Use SSL connection                     | `false`      |
+| `--save`     |       | Save connection configuration          | `true`       |
+| `--test`     |       | Test connection only (don't establish) | `false`      |
+
+### `list` - List Resources
+
+List databases, tables, or saved connections.
 
 ```bash
-# List saved connections
-dbmux list --connections
-dbmux config list
-
 # List all databases
 dbmux list --databases
 
@@ -165,179 +139,346 @@ dbmux list --tables
 # List tables in specific schema
 dbmux list --tables --schema public
 
-# Use specific saved connection
-dbmux list --tables -n production
+# List saved connections
+dbmux list --connections
+
+# Use specific connection
+dbmux list --databases -n production
 ```
 
-### Execute Queries
+| Option          | Alias  | Description                   | Default  |
+| --------------- | ------ | ----------------------------- | -------- |
+| `--databases`   | `--db` | List all databases            | -        |
+| `--tables`      | `-t`   | List tables in database       | -        |
+| `--connections` | `-c`   | List saved connections        | -        |
+| `--connection`  | `-n`   | Use specific saved connection | default  |
+| `--schema`      |        | Schema for table listing      | `public` |
+| `--database`    | `-d`   | Target database               | -        |
+
+### `query` - Execute SQL
+
+Execute SQL queries with flexible output formats.
 
 ```bash
-# Execute a simple query
+# Execute inline query
 dbmux query -q "SELECT * FROM users LIMIT 5"
-
-# Execute with specific output format
-dbmux query -q "SELECT name, email FROM users" --format json
-dbmux query -q "SELECT * FROM orders" --format csv
 
 # Execute from file
 dbmux query -f queries.sql
 
-# Use saved connection
-dbmux query -n production -q "SELECT version()"
+# Output as JSON
+dbmux query -q "SELECT * FROM users" --format json
+
+# Output as CSV
+dbmux query -q "SELECT * FROM users" --format csv
 
 # Limit results
 dbmux query -q "SELECT * FROM logs" --limit 100
+
+# Use specific connection
+dbmux query -n production -q "SELECT version()"
 ```
-
-### Database Backup & Restore (PostgreSQL Only)
-
-```bash
-# Create a database dump (interactive mode)
-dbmux dump
-
-# Create dump with specific database and output file
-dbmux dump -d myapp_production -o backup
-
-# Create dump with custom format
-dbmux dump -d myapp_db --format plain
-
-# Create dump with verbose output
-dbmux dump -d myapp_db --verbose
-
-# Restore from a dump file (interactive mode)
-dbmux restore
-
-# Restore specific file to new database
-dbmux restore -f backup.dump --create
-
-# Restore and drop existing database
-dbmux restore -f backup.dump -d myapp_dev --drop
-
-# Restore with verbose output
-dbmux restore -f backup.dump --verbose
-```
-
-### Configuration Management
-
-Run commands with flags, or use the interactive prompts for adding and removing connections.
-
-```bash
-# Add a new connection interactively
-dbmux config add
-
-# Remove a connection interactively
-dbmux config remove
-
-# List all saved connections
-dbmux config list
-
-# Set default connection
-dbmux config default -n production
-
-# Show configuration file location and contents
-dbmux config show
-```
-
-## Commands Reference
-
-### `dbmux connect [options]`
-
-Connect to a database. If required flags (like `--user` or `--file`) are omitted, it starts an interactive setup.
-
-| Option       | Alias | Description                                           | Default        | Required (non-interactive)   |
-| ------------ | ----- | ----------------------------------------------------- | -------------- | ---------------------------- |
-| `--url`      | `-U`  | Database URL (e.g., `postgresql://user:pass@host/db`) | -              | No                           |
-| `--type`     |       | Database type (e.g., `postgresql`)                    | `postgresql`   | No                           |
-| `--name`     | `-n`  | Connection name for saving                            | auto-generated | No                           |
-| `--host`     | `-H`  | Database host (not for SQLite)                        | `localhost`    | No                           |
-| `--port`     | `-p`  | Database port (not for SQLite)                        | `5432`         | No                           |
-| `--user`     | `-u`  | Database username (not for SQLite)                    | -              | **Yes** (unless using --url) |
-| `--password` | `-w`  | Database password                                     | prompt         | No                           |
-| `--database` | `-d`  | Database name (not for SQLite)                        | -              | **Yes** (unless using --url) |
-| `--file`     |       | File path for SQLite connection                       | -              | **Yes** (for SQLite)         |
-| `--ssl`      |       | Use SSL connection (PostgreSQL only)                  | `false`        | No                           |
-| `--save`     |       | Save connection configuration                         | `true`         | No                           |
-| `--test`     |       | Test connection without saving                        | `false`        | No                           |
-| `--verbose`  |       | Enable verbose logging from `pg_restore`              | `false`        | No                           |
-
-### `dbmux list [options]`
-
-List databases, tables, or saved connections.
-
-| Option          | Alias  | Description              |
-| --------------- | ------ | ------------------------ |
-| `--databases`   | `--db` | List all databases       |
-| `--tables`      | `-t`   | List tables in database  |
-| `--connections` | `-c`   | List saved connections   |
-| `--connection`  | `-n`   | Use specific connection  |
-| `--schema`      |        | Schema for table listing |
-| `--limit`       | `-l`   | Limit number of rows     |
-
-### `dbmux query [options]`
-
-Execute SQL queries with flexible output.
 
 | Option         | Alias | Description                    | Default |
 | -------------- | ----- | ------------------------------ | ------- |
-| `--sql`        | `-q`  | SQL query to execute           |         |
-| `--file`       | `-f`  | Execute SQL from file          |         |
-| `--connection` | `-n`  | Use saved connection           |         |
-| `--format`     |       | Output format (table/json/csv) | table   |
-| `--limit`      | `-l`  | Limit number of rows           |         |
+| `--sql`        | `-q`  | SQL query to execute           | -       |
+| `--file`       | `-f`  | Execute SQL from file          | -       |
+| `--connection` | `-n`  | Use saved connection           | default |
+| `--database`   | `-d`  | Target database                | -       |
+| `--format`     |       | Output format (table/json/csv) | `table` |
+| `--limit`      | `-l`  | Limit number of rows           | -       |
 
-### `dbmux dump [options]`
+### `dump` - Database Backup
 
-Create a backup of a PostgreSQL database. This command requires `pg_dump` to be installed and available in your system's PATH.
+Create database backups using pg_dump. Requires `pg_dump` in PATH.
 
-| Option         | Alias      | Description                                   | Default  |
-| -------------- | ---------- | --------------------------------------------- | -------- |
-| `--connection` | `-c`, `-n` | Use a specific saved connection               | default  |
-| `--database`   | `-d`       | The database to dump (interactive if not set) | -        |
-| `--output`     | `-o`       | The output file path (e.g., `backup.dump`)    | auto-gen |
-| `--format`     | `-F`       | Dump format (`custom`, `plain`, `tar`, `dir`) | `custom` |
-| `--verbose`    |            | Enable verbose logging from `pg_dump`         | `false`  |
+#### `dump create` - Create a Backup
 
-### `dbmux restore [options]`
+```bash
+# Interactive mode
+dbmux dump create
 
-Restore a PostgreSQL database from a dump file. This command requires `pg_restore` and `psql` to be installed and available in your system's PATH.
+# Specify database
+dbmux dump create -d myapp_production
 
-| Option         | Alias      | Description                                       | Default |
-| -------------- | ---------- | ------------------------------------------------- | ------- |
-| `--connection` | `-c`, `-n` | Use a specific saved connection                   | default |
-| `--file`       | `-f`       | The dump file to restore (interactive if not set) | -       |
-| `--database`   | `-d`       | The target database name (interactive if not set) | -       |
-| `--create`     |            | Create the target database before restoring       | `false` |
-| `--drop`       |            | Drop the database before recreating and restoring | `false` |
-| `--verbose`    |            | Enable verbose logging from `pg_restore`          | `false` |
+# Custom output filename
+dbmux dump create -d mydb -o my-backup
 
-### `dbmux config <subcommand>`
+# Different format
+dbmux dump create -d mydb --format plain
 
-Manage configuration and connections.
+# Verbose output
+dbmux dump create -d mydb --verbose
+```
 
-- `dbmux config add` - Add a new connection interactively
-- `dbmux config list` - List all saved connections
-- `dbmux config remove [name]` - Remove a connection (interactive if name is omitted)
-- `dbmux config default -n <name>` - Set default connection
-- `dbmux config show` - Show config file and settings
+| Option         | Alias | Description                              | Default  |
+| -------------- | ----- | ---------------------------------------- | -------- |
+| `--database`   | `-d`  | Database to dump                         | prompt   |
+| `--connection` | `-n`  | Use saved connection                     | default  |
+| `--format`     | `-f`  | Dump format (custom/plain/directory/tar) | `custom` |
+| `--output`     | `-o`  | Output filename (without extension)      | auto-gen |
+| `--verbose`    |       | Enable verbose output                    | `false`  |
+
+#### `dump delete` - Delete Dump Files
+
+```bash
+# Interactive selection
+dbmux dump delete
+
+# Delete specific file
+dbmux dump delete -f backup.dump
+
+# Force delete without confirmation
+dbmux dump delete -f backup.dump -F
+```
+
+| Option    | Alias | Description             |
+| --------- | ----- | ----------------------- |
+| `--file`  | `-f`  | Specific file to delete |
+| `--force` | `-F`  | Skip confirmation       |
+
+#### `dump history` - View Dump History
+
+```bash
+# Show recent dumps
+dbmux dump history
+
+# Limit results
+dbmux dump history -l 5
+
+# Output as JSON
+dbmux dump history -f json
+```
+
+| Option     | Alias | Description                | Default |
+| ---------- | ----- | -------------------------- | ------- |
+| `--limit`  | `-l`  | Number of entries          | 10      |
+| `--format` | `-f`  | Output format (table/json) | `table` |
+
+### `restore` - Database Restore
+
+Restore databases from dump files. Requires `pg_restore` and `psql` in PATH.
+
+#### `restore run` - Restore a Database
+
+```bash
+# Interactive mode
+dbmux restore run
+
+# Restore to existing database
+dbmux restore run -f backup.dump -d mydb
+
+# Create new database and restore
+dbmux restore run -f backup.dump -d mydb_new --create
+
+# Drop existing and restore
+dbmux restore run -f backup.dump -d mydb --drop
+
+# Restore from history
+dbmux restore run --fromHistory
+
+# Verbose output
+dbmux restore run -f backup.dump -d mydb --verbose
+```
+
+| Option          | Alias | Description                      | Default |
+| --------------- | ----- | -------------------------------- | ------- |
+| `--file`        | `-f`  | Dump file to restore             | prompt  |
+| `--database`    | `-d`  | Target database name             | prompt  |
+| `--connection`  | `-n`  | Use saved connection             | default |
+| `--create`      | `-c`  | Create database before restoring | `false` |
+| `--drop`        |       | Drop database before restoring   | `false` |
+| `--fromHistory` | `-H`  | Select from dump history         | `false` |
+| `--verbose`     |       | Enable verbose output            | `false` |
+
+#### `restore history` - View Restore History
+
+```bash
+# Show recent restores
+dbmux restore history
+
+# Limit and format
+dbmux restore history -l 5 -f json
+```
+
+### `db` - Database Management
+
+Direct database management operations.
+
+#### `db delete` - Delete a Database
+
+Delete (DROP) a database from the server. Includes safety confirmations.
+
+```bash
+# Interactive selection
+dbmux db delete
+
+# Delete specific database
+dbmux db delete -d old_database
+
+# Force delete (skip confirmations)
+dbmux db delete -d old_database -F
+
+# Use specific connection
+dbmux db delete -n production -d test_db
+```
+
+| Option         | Alias | Description               |
+| -------------- | ----- | ------------------------- |
+| `--database`   | `-d`  | Database to delete        |
+| `--connection` | `-n`  | Use saved connection      |
+| `--force`      | `-F`  | Skip confirmation prompts |
+
+### `config` - Configuration Management
+
+Manage saved connections and configuration.
+
+#### `config add` - Add Connection
+
+```bash
+dbmux config add
+```
+
+Interactively add a new connection (URL or individual fields).
+
+#### `config list` - List Connections
+
+```bash
+dbmux config list
+```
+
+Display all saved connections with details.
+
+#### `config remove` - Remove Connection
+
+```bash
+# Interactive selection
+dbmux config remove
+
+# Remove specific connection
+dbmux config remove -n old-connection
+```
+
+#### `config default` - Set Default
+
+```bash
+dbmux config default -n production
+```
+
+Set the default connection used when no connection is specified.
+
+#### `config show` - Show Configuration
+
+```bash
+dbmux config show
+```
+
+Display the full configuration file contents.
+
+#### `config path` - Show Config Path
+
+```bash
+dbmux config path
+```
+
+Display the path to the configuration file (`~/.dbmux/config.json`).
+
+#### `config rename` - Rename Connection
+
+```bash
+# Interactive
+dbmux config rename
+
+# Specify names
+dbmux config rename -n old-name --newName new-name
+```
+
+#### `config manage` - Interactive Management
+
+```bash
+dbmux config manage
+```
+
+Open an interactive menu for connection management.
+
+### `history` - Dump/Restore History
+
+View and manage operation history.
+
+#### `history list` - List History
+
+```bash
+# All history
+dbmux history list
+
+# Only dumps
+dbmux history list -t dump
+
+# Only restores
+dbmux history list -t restore
+
+# Limit and format
+dbmux history list -l 10 -f json
+```
+
+| Option     | Alias | Description                   | Default |
+| ---------- | ----- | ----------------------------- | ------- |
+| `--type`   | `-t`  | Filter by type (dump/restore) | all     |
+| `--limit`  | `-l`  | Number of entries             | 10      |
+| `--format` | `-f`  | Output format (table/json)    | `table` |
+
+#### `history clear` - Clear History
+
+```bash
+# Clear all history
+dbmux history clear
+
+# Clear only dump history
+dbmux history clear -t dump
+
+# Clear only restore history
+dbmux history clear -t restore
+```
+
+### `status` - Connection Status
+
+```bash
+dbmux status
+```
+
+Show the current active session and default connection.
+
+### `disconnect` - Clear Session
+
+```bash
+dbmux disconnect
+```
+
+Clear the active connection session, reverting to the default connection.
 
 ## Configuration
 
-DBMux stores configuration in `~/.dbmux/config.json`. Each connection now has a `type` field.
+DBMux stores configuration in `~/.dbmux/config.json`:
 
 ```json
 {
     "connections": {
-        "my-postgres": {
+        "production": {
+            "type": "postgresql",
+            "host": "db.example.com",
+            "port": 5432,
+            "user": "admin",
+            "database": "myapp",
+            "ssl": true,
+            "lastConnectedAt": "2024-01-15T10:30:00Z"
+        },
+        "local": {
             "type": "postgresql",
             "host": "localhost",
             "port": 5432,
             "user": "postgres",
             "database": "myapp_dev",
             "ssl": false
-        },
-        "my-sqlite": {
-            "type": "sqlite",
-            "filePath": "./db.sqlite"
         }
     },
     "defaultConnection": "local",
@@ -349,182 +490,159 @@ DBMux stores configuration in `~/.dbmux/config.json`. Each connection now has a 
 }
 ```
 
-## Project Structure
+Dump files are stored in `~/.dbmux/dumps/` with operation history tracked in `~/.dbmux/history.json`.
+
+## Development
+
+### Setup
+
+```bash
+# Clone repository
+git clone https://github.com/bhagyamudgal/dbmux.git
+cd dbmux
+
+# Install dependencies
+bun install
+
+# Build all packages
+bun run build
+
+# Run CLI in development
+bun run dev:cli -- --help
+```
+
+### Available Scripts
+
+```bash
+# Build
+bun run build              # Build all packages
+bun run build:cli          # Build CLI only
+bun run build:web          # Build web only
+bun run build:binaries     # Build cross-platform binaries
+
+# Development
+bun run dev                # Start all in dev mode
+bun run dev:cli            # CLI development
+bun run dev:web            # Web development
+
+# Testing
+bun run test               # Run all tests
+bun run test:cli           # CLI tests only
+
+# Code Quality
+bun run lint               # Lint all packages
+bun run typecheck          # TypeScript check
+bun run format             # Format code
+bun run format:check       # Check formatting
+```
+
+### Testing
+
+Tests use Vitest with complete isolation:
+
+```bash
+# Run tests
+bun run test
+
+# Watch mode
+cd packages/cli && bun run test:watch
+
+# Coverage
+cd packages/cli && bun run coverage
+```
+
+### CLI Package Structure
 
 ```
-src/
-├── commands/          # Command implementations
-│   ├── config/        # Configuration subcommands
-│   │   ├── add.ts     # Add new connections
-│   │   ├── default.ts # Set default connection
-│   │   ├── list.ts    # List saved connections
-│   │   ├── manage.ts  # Interactive connection management
-│   │   ├── path.ts    # Show config path
-│   │   ├── remove.ts  # Remove connections
-│   │   ├── rename.ts  # Rename connections
-│   │   └── show.ts    # Show config contents
-│   ├── config.ts      # Configuration management
-│   ├── connect.ts     # Database connection logic
-│   ├── disconnect.ts  # Clear active connection
-│   ├── dump.ts        # Database dump operations (pg_dump)
-│   ├── list.ts        # List databases/tables/connections
-│   ├── query.ts       # SQL query execution
-│   ├── restore.ts     # Database restore operations (pg_restore)
-│   └── status.ts      # Show connection status
-├── db-drivers/        # Database-specific implementations
-│   ├── database-driver.ts   # Driver interface
-│   ├── driver-factory.ts    # Driver creation
-│   └── postgres-driver.ts   # PostgreSQL implementation
-├── types/             # TypeScript type definitions
-│   └── database.ts    # Database-related types
-├── utils/             # Utility functions
-│   ├── command-check.ts     # External command validation
-│   ├── command-runner.ts    # Command execution utilities
-│   ├── config.ts            # Configuration file management
-│   ├── constants.ts         # Application constants
-│   ├── database.ts          # Database connection utilities
-│   ├── dump-restore.ts      # Dump & restore utility functions
-│   ├── general.ts           # General utility functions
-│   ├── logger.ts            # Colored logging utilities
-│   ├── prompt.ts            # Interactive prompts and URL parsing
-│   └── session.ts           # Session management
-└── index.ts           # Main CLI entry point (BroCLI)
-.
-├── .cursorules        # Your custom rules for the assistant
-├── .prettierrc.json   # Prettier formatting rules
-└── eslint.config.js   # ESLint configuration
+packages/cli/
+├── src/
+│   ├── commands/              # Command implementations
+│   │   ├── config/            # Config subcommands
+│   │   │   ├── add.ts
+│   │   │   ├── default.ts
+│   │   │   ├── list.ts
+│   │   │   ├── manage.ts
+│   │   │   ├── path.ts
+│   │   │   ├── remove.ts
+│   │   │   ├── rename.ts
+│   │   │   └── show.ts
+│   │   ├── db/                # Database subcommands
+│   │   │   └── delete.ts
+│   │   ├── history/           # History subcommands
+│   │   │   ├── clear.ts
+│   │   │   └── list.ts
+│   │   ├── config.ts
+│   │   ├── connect.ts
+│   │   ├── db.ts
+│   │   ├── disconnect.ts
+│   │   ├── dump.ts
+│   │   ├── dump-delete.ts
+│   │   ├── history.ts
+│   │   ├── list.ts
+│   │   ├── query.ts
+│   │   ├── restore.ts
+│   │   └── status.ts
+│   ├── db-drivers/            # Database drivers
+│   │   ├── database-driver.ts # Driver interface
+│   │   ├── driver-factory.ts  # Driver factory
+│   │   └── postgres-driver.ts # PostgreSQL implementation
+│   ├── utils/                 # Utilities
+│   │   ├── command-check.ts
+│   │   ├── command-runner.ts
+│   │   ├── config.ts
+│   │   ├── database.ts
+│   │   ├── dump-restore.ts
+│   │   ├── logger.ts
+│   │   ├── prompt.ts
+│   │   └── session.ts
+│   └── index.ts               # CLI entry point
+├── tests/                     # Test files
+├── package.json
+└── tsconfig.json
 ```
+
+## Architecture
+
+DBMux uses a driver-based architecture for database operations:
+
+- **`DatabaseDriver` Interface**: Contract for all database operations
+- **Driver Implementations**: Database-specific logic (PostgreSQL, SQLite, etc.)
+- **Driver Factory**: Instantiates the correct driver based on connection type
+
+### Adding a New Database Driver
+
+1. Create driver: `packages/cli/src/db-drivers/mysql-driver.ts`
+2. Implement `DatabaseDriver` interface
+3. Register in `driver-factory.ts`
+4. Add type to `@dbmux/types`
 
 ## Dependencies
 
 **Runtime:**
 
-- `@drizzle-team/brocli` - Modern CLI framework
-- `pg` - PostgreSQL client for Node.js
-- `cli-table3` - For displaying tabular data
-- `@inquirer/prompts` - For interactive prompts
+- `@drizzle-team/brocli` - CLI framework
+- `pg` - PostgreSQL client
+- `cli-table3` - Table formatting
+- `@inquirer/prompts` - Interactive prompts
+- `chalk` - Colored output
+- `command-exists` - External command checking
 
 **Development:**
 
-- `typescript` - Type safety and modern JavaScript features
-- `tsx` - TypeScript execution for development
-- `eslint` - Code quality linter
-- `@typescript-eslint/parser` - ESLint parser for TypeScript
-- `@typescript-eslint/eslint-plugin` - ESLint rules for TypeScript
-- `prettier` - Code formatter
-- `eslint-config-prettier` - Disables ESLint formatting rules
-- `globals` - ESLint global variables
-
-## npm Publishing
-
-The package is configured for npm publishing with:
-
-- Proper `bin` entry for global installation
-- `prepublishOnly` script for automatic building
-- Comprehensive `files` array for package inclusion
-- Rich metadata and keywords for discoverability
-
-## Detailed Commands
-
-### `connect`
-
-Connect to a database. You can connect to a pre-existing saved connection, or create a new one. Creating a new connection will prompt you to save it for future use.
-
-```bash
-dbmux connect
-# or specify a saved connection
-dbmux connect --name my-connection
-```
-
-This command sets the chosen connection as the "active" connection for your current session, which will be used by other commands until you `disconnect` or choose a new one.
-
-### `config`
-
-Manage your saved connections.
-
-- **`config add`**: Interactively add a new connection.
-- **`config list`**: List all saved connections.
-- **`config remove`**: Remove a saved connection.
-- **`config default <name>`**: Set the default connection.
-- **`config show`**: Show the full configuration file.
-- **`config path`**: Display the path to your config file.
-- **`config rename`**: Interactively rename a connection.
-- **`config manage`**: Open an interactive menu for connection management.
-
-### `list`
-
-List databases, tables, or saved connections.
-
-- `--databases`: List all databases.
-- `--tables`: List tables in the current database.
-- `--connections`: List all saved connection names.
-- `--connection <name>`: Use a specific saved connection.
-- `--database <db_name>`: Temporarily switch to a different database for this command.
-- `--schema <schema_name>`: Specify a schema (default: `public`).
-
-### `query`
-
-Execute SQL queries.
-
-- `--sql <"query">`: The SQL query to execute.
-- `--file <path>`: Path to a `.sql` file.
-- `--connection <name>`: Use a specific saved connection.
-- `--database <db_name>`: Temporarily switch to a different database for this command.
-- `--format <format>`: Output format (`table`, `json`, `csv`).
-- `--limit <number>`: Limit the number of returned rows.
-
-### `dump`
-
-Create a backup of a PostgreSQL database. This command requires `pg_dump` to be installed and available in your system's PATH.
-
-- `--connection <name>`: Use a specific saved connection.
-- `--database <db_name>`: The database to dump (interactive if not set).
-- `--output <path>`: Output file path.
-- `--verbose`: Enable verbose logging.
-
-### `restore`
-
-Restore a database from a dump file.
-
-- `--file <path>`: Path to the dump file.
-- `--database <db_name>`: The target database name.
-- `--connection <name>`: Use a specific saved connection.
-- `--create`: Create the database before restoring.
-- `--drop`: Drop the database before restoring.
-- `--verbose`: Enable verbose logging.
-
-### `status`
-
-Shows the current active (session) and default (saved) connections.
-
-```bash
-dbmux status
-```
-
-### `disconnect`
-
-Clears the active connection from your session, reverting all subsequent commands to use the saved default connection.
-
-```bash
-dbmux disconnect
-```
+- `typescript` - Type safety
+- `vitest` - Testing framework
+- `eslint` + `typescript-eslint` - Linting
+- `prettier` - Code formatting
+- `turbo` - Monorepo build system
 
 ## Contributing
 
-<!-- ... existing code ... -->
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `bun run test`
+5. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Changelog
-
-For a detailed list of changes, please see the [changelog directory](./changelog).
-
-```
-
-```
-
-```
-
-```
+MIT License - see [LICENSE](LICENSE) for details.

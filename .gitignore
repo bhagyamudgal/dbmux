@@ -3,8 +3,15 @@ node_modules/
 
 # Build output
 dist/
-binaries/
+.turbo/
+apps/*/dist/
+packages/*/dist/
+packages/cli/binaries/
 *.tsbuildinfo
+
+# Next.js
+.next/
+out/
 
 # Environment variables
 .env
@@ -49,4 +56,4 @@ Thumbs.db
 
 # Temporary files
 tmp/
-temp/ 
+temp/

@@ -1,7 +1,7 @@
-out
+node_modules
 dist
-LICENSE.md
-tsconfig.json
-tsconfig.*.json
-coverage/
+.next
+.turbo
+coverage
 bun.lock
+packages/dbmux-cli/binaries

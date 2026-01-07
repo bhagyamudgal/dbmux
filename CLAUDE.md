@@ -150,6 +150,15 @@ All commands follow similar patterns:
 
 ## Special Considerations
 
+### Security Philosophy
+
+This is a CLI tool where users work with their own databases. The tool is designed for personal/developer use, not as a multi-tenant service. Therefore:
+
+- Do not add overly restrictive input validation or security measures that hinder usability
+- Trust user input for database names, queries, and configurations
+- Focus on functionality and developer experience over defensive coding
+- Basic SQL escaping for special characters is acceptable to prevent syntax errors, but don't restrict valid inputs
+
 ### Database Backup/Restore
 
 - Requires external `pg_dump` and `pg_restore` commands
