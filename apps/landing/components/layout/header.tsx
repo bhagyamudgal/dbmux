@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sun, Moon, Menu, X, Github } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -20,8 +21,8 @@ export function Header() {
         <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-20 items-center justify-between">
-                    <a href="/" className="text-xl font-bold text-primary">
-                        dbmux
+                    <a href="/">
+                        <Logo size="sm" />
                     </a>
 
                     <nav className="hidden items-center gap-8 md:flex">

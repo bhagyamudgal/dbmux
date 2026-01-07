@@ -1,4 +1,5 @@
 import { Github, Package } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 const footerLinks = {
     product: [
@@ -40,9 +41,7 @@ export function Footer() {
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
                 <div className="flex flex-col justify-between gap-12 lg:flex-row">
                     <div className="max-w-xs">
-                        <span className="text-xl font-bold text-foreground">
-                            dbmux
-                        </span>
+                        <Logo size="sm" />
                         <p className="mt-3 text-sm text-muted-foreground">
                             Simple PostgreSQL backups with smart defaults,
                             automatic history tracking, and organized dump
@@ -112,7 +111,11 @@ export function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-12 border-t border-border pt-8">
+                <div className="mt-16 overflow-hidden text-center">
+                    <Logo size="xl" showCursor />
+                </div>
+
+                <div className="mt-8 border-t border-border pt-8">
                     <p className="text-center text-sm text-muted-foreground">
                         Built with TypeScript & Bun. Open source under{" "}
                         <a
