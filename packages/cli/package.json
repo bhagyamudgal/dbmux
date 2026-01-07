@@ -1,0 +1,80 @@
+{
+    "name": "dbmux",
+    "version": "2.2.0",
+    "description": "A flexible database management CLI tool with persistent configuration",
+    "type": "module",
+    "main": "dist/index.js",
+    "bin": {
+        "dbmux": "dist/index.js"
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/bhagyamudgal/dbmux.git",
+        "directory": "packages/cli"
+    },
+    "bugs": {
+        "url": "https://github.com/bhagyamudgal/dbmux/issues"
+    },
+    "homepage": "https://github.com/bhagyamudgal/dbmux#readme",
+    "scripts": {
+        "dev": "bun src/index.ts",
+        "dev:watch": "bun --watch src/index.ts",
+        "build": "bun build src/index.ts --outdir dist --target node && chmod +x dist/index.js",
+        "clean": "rm -rf dist binaries",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint .",
+        "test": "vitest run",
+        "test:watch": "vitest --watch",
+        "coverage": "vitest run --coverage",
+        "build:binary": "mkdir -p binaries && bun build src/index.ts --compile --outfile binaries/dbmux",
+        "build:linux": "mkdir -p binaries && bun build src/index.ts --compile --target=bun-linux-x64 --outfile binaries/dbmux-linux-x64",
+        "build:macos-intel": "mkdir -p binaries && bun build src/index.ts --compile --target=bun-darwin-x64 --outfile binaries/dbmux-darwin-x64",
+        "build:macos-arm": "mkdir -p binaries && bun build src/index.ts --compile --target=bun-darwin-arm64 --outfile binaries/dbmux-darwin-arm64",
+        "build:windows": "mkdir -p binaries && bun build src/index.ts --compile --target=bun-windows-x64 --outfile binaries/dbmux-windows-x64.exe",
+        "build:binaries": "bun run build:linux && bun run build:macos-intel && bun run build:macos-arm && bun run build:windows"
+    },
+    "dependencies": {
+        "@drizzle-team/brocli": "^0.11.0",
+        "@inquirer/prompts": "^7.6.0",
+        "@dbmux/types": "workspace:*",
+        "@dbmux/utils": "workspace:*",
+        "chalk": "^5.4.1",
+        "cli-table3": "^0.6.5",
+        "command-exists": "^1.2.9",
+        "pg": "^8.16.3",
+        "table": "^6.9.0"
+    },
+    "devDependencies": {
+        "@dbmux/eslint-config": "workspace:*",
+        "@dbmux/typescript-config": "workspace:*",
+        "@types/command-exists": "^1.2.3",
+        "@types/node": "^24.0.10",
+        "@types/pg": "^8.15.4",
+        "@types/table": "^6.3.2",
+        "@vitest/coverage-v8": "3.2.4",
+        "ts-mockito": "^2.6.1",
+        "typescript": "^5.8.3",
+        "vitest": "^3.2.4"
+    },
+    "keywords": [
+        "cli",
+        "database",
+        "postgresql",
+        "postgres",
+        "sql",
+        "management",
+        "query",
+        "typescript",
+        "brocli"
+    ],
+    "author": "",
+    "license": "MIT",
+    "engines": {
+        "node": ">=22.0.0"
+    }
+}

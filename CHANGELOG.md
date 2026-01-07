@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2025-01-07
+
+### Fixed
+
+- **Disconnect Command**: Now correctly handles case when no default connection is configured
+- **Config Rename**: Validates that new connection name doesn't already exist before renaming
+- **Connection Prompt**: Fixed SSL default logic when parsing database URLs
+- **Connection Prompt**: Added port validation (1-65535) in interactive mode
+
 ## [2.1.2] - 2025-12-17
 
 ### Fixed

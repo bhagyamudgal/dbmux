@@ -1,0 +1,10 @@
+{
+    "extends": "@dbmux/typescript-config/library.json",
+    "compilerOptions": {
+        "rootDir": "src",
+        "outDir": "dist",
+        "noEmit": true
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
+}
