@@ -1,2 +1,2 @@
-export * from "./constants.ts";
-export * from "./general.ts";
+export * from "./constants";
+export * from "./general";
