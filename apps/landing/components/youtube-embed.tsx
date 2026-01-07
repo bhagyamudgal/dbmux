@@ -5,7 +5,7 @@ type YouTubeEmbedProps = {
 
 export function YouTubeEmbed({
     videoId,
-    title = "DBMux Demo",
+    title = "dbmux Demo",
 }: YouTubeEmbedProps) {
     return (
         <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border bg-muted shadow-lg">

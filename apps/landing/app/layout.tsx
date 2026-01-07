@@ -10,9 +10,33 @@ const notoSans = notoSansFont({
 });
 
 export const metadata: Metadata = {
-    title: "DBMux - Database Management CLI",
+    title: "dbmux - Database Backups Made Simple",
     description:
-        "A powerful CLI tool for managing PostgreSQL databases with persistent configuration, backup/restore, and multi-connection support.",
+        "Skip the pg_dump syntax lookup. dbmux gives you simple commands with smart defaults, automatic history tracking, and organized dump files.",
+    keywords: [
+        "database backup",
+        "postgresql",
+        "pg_dump",
+        "cli tool",
+        "database restore",
+        "postgres backup",
+        "database management",
+    ],
+    authors: [{ name: "Bhagya Mudgal" }],
+    openGraph: {
+        title: "dbmux - Database Backups Made Simple",
+        description:
+            "Skip the pg_dump syntax lookup. Simple commands with smart defaults, automatic history tracking, and organized dump files.",
+        type: "website",
+        locale: "en_US",
+        siteName: "dbmux",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "dbmux - Database Backups Made Simple",
+        description:
+            "Skip the pg_dump syntax lookup. Simple commands with smart defaults, automatic history tracking, and organized dump files.",
+    },
 };
 
 export default function RootLayout({
