@@ -11,24 +11,39 @@ const { logger } = vi.hoisted(() => ({
         success: vi.fn(),
     },
 }));
+const { loadConfig } = vi.hoisted(() => ({
+    loadConfig: vi.fn(),
+}));
 
 vi.mock("../src/utils/session.js", () => ({
     getActiveConnection,
     clearActiveConnection,
 }));
 vi.mock("../src/utils/logger.js", () => ({ logger }));
+vi.mock("../src/utils/config.js", () => ({ loadConfig }));
 
 describe("executeDisconnectCommand", () => {
     beforeEach(() => {
         vi.resetAllMocks();
     });
 
-    it("should clear the active connection if one exists", () => {
+    it("should clear the active connection and show default message if default exists", () => {
         getActiveConnection.mockReturnValue("my-active-session");
+        loadConfig.mockReturnValue({ defaultConnection: "my-default" });
         executeDisconnectCommand();
         expect(clearActiveConnection).toHaveBeenCalledOnce();
         expect(logger.success).toHaveBeenCalledWith(
             "Disconnected from 'my-active-session'. Using default connection now."
+        );
+    });
+
+    it("should clear the active connection without default message if no default exists", () => {
+        getActiveConnection.mockReturnValue("my-active-session");
+        loadConfig.mockReturnValue({});
+        executeDisconnectCommand();
+        expect(clearActiveConnection).toHaveBeenCalledOnce();
+        expect(logger.success).toHaveBeenCalledWith(
+            "Disconnected from 'my-active-session'."
         );
     });
 
