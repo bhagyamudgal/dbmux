@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 .turbo/
+apps/*/.next/
 apps/*/dist/
 packages/*/dist/
 packages/cli/binaries/

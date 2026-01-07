@@ -19,7 +19,7 @@ This project is organized as a Turborepo monorepo:
 ```
 dbmux/
 ├── apps/
-│   └── web/                      # Next.js website (landing + docs)
+│   └── landing/                  # Next.js landing page + docs
 ├── packages/
 │   ├── cli/                      # Main CLI (publishes as 'dbmux' on npm)
 │   ├── types/                    # @dbmux/types - shared type definitions
@@ -517,13 +517,14 @@ bun run dev:cli -- --help
 # Build
 bun run build              # Build all packages
 bun run build:cli          # Build CLI only
-bun run build:web          # Build web only
+bun run build:landing      # Build landing page only
 bun run build:binaries     # Build cross-platform binaries
 
 # Development
 bun run dev                # Start all in dev mode
-bun run dev:cli            # CLI development
-bun run dev:web            # Web development
+bun run dev:cli            # CLI development (run once)
+bun run dev:cli:watch      # CLI development (watch mode)
+bun run dev:landing        # Landing page development
 
 # Testing
 bun run test               # Run all tests
