@@ -6,6 +6,12 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$SCRIPT_DIR"
+CLI_PKG="$REPO_ROOT/packages/cli"
+
+cd "$REPO_ROOT"
+
 VERSION=$1
 
 if [ -z "$VERSION" ]; then
@@ -92,12 +98,12 @@ else
 fi
 
 # Update package.json version in CLI package
-echo "Updating packages/cli/package.json version to $VERSION"
+echo "Updating $CLI_PKG/package.json version to $VERSION"
 node -e "
 const fs = require('fs');
-const pkg = JSON.parse(fs.readFileSync('packages/cli/package.json', 'utf8'));
+const pkg = JSON.parse(fs.readFileSync('$CLI_PKG/package.json', 'utf8'));
 pkg.version = '$VERSION';
-fs.writeFileSync('packages/cli/package.json', JSON.stringify(pkg, null, 4) + '\n');
+fs.writeFileSync('$CLI_PKG/package.json', JSON.stringify(pkg, null, 4) + '\n');
 console.log('Version updated to $VERSION');
 "
 
@@ -113,18 +119,15 @@ echo "Building project..."
 bun run build
 
 echo "Building binaries..."
-cd packages/cli
-bun run build:binaries
+bun run --cwd "$CLI_PKG" build:binaries
 
 echo "Creating checksums..."
-cd binaries
-sha256sum * > checksums.txt
+(cd "$CLI_PKG/binaries" && sha256sum -- * > checksums.txt)
 echo "Checksums created:"
-cat checksums.txt
-cd ../../..
+cat "$CLI_PKG/binaries/checksums.txt"
 
 echo "Git operations..."
-git add packages/cli/package.json
+git add "$CLI_PKG/package.json"
 
 # Only commit if there are changes to commit
 if ! git diff --cached --quiet; then
@@ -147,7 +150,7 @@ echo ""
 echo "To complete the release:"
 echo "1. Push the changes: git push origin main"
 echo "2. Push the tag: git push origin v$VERSION"
-echo "3. Manually publish to npm: cd packages/cli && npm publish"
+echo "3. Manually publish to npm: cd $CLI_PKG && npm publish"
 echo ""
 echo "The GitHub Action will automatically create the release with binaries."
 echo "You'll need to manually publish to npm using your 2FA setup."

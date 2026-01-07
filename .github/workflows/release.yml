@@ -49,7 +49,7 @@ jobs:
             - name: Create checksums
               run: |
                   cd packages/cli/binaries
-                  sha256sum * > checksums.txt
+                  sha256sum -- * > checksums.txt
                   cat checksums.txt
 
             - name: Get version from tag

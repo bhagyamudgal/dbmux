@@ -84,12 +84,24 @@ get_latest_version() {
     echo "$version"
 }
 
+compute_sha256() {
+    local file="$1"
+    if command -v sha256sum &> /dev/null; then
+        sha256sum "$file" | awk '{print $1}'
+    elif command -v shasum &> /dev/null; then
+        shasum -a 256 "$file" | awk '{print $1}'
+    else
+        error "No SHA256 tool available. Please install sha256sum or shasum."
+    fi
+}
+
 download_binary() {
     local platform="$1"
     local version="$2"
     local tmp_dir
     local binary_name
     local download_url
+    local checksums_url
 
     tmp_dir=$(mktemp -d)
 
@@ -113,6 +125,7 @@ download_binary() {
     esac
 
     download_url="https://github.com/${REPO}/releases/download/${version}/${binary_name}"
+    checksums_url="https://github.com/${REPO}/releases/download/${version}/checksums.txt"
 
     info "Downloading ${binary_name} from ${version}..."
 
@@ -120,6 +133,31 @@ download_binary() {
         rm -rf "$tmp_dir"
         error "Failed to download binary. Please check if the release exists."
     fi
+
+    info "Verifying checksum..."
+
+    if ! curl -fsSL "$checksums_url" -o "${tmp_dir}/checksums.txt"; then
+        rm -rf "$tmp_dir"
+        error "Failed to download checksums file. Cannot verify binary integrity."
+    fi
+
+    local expected_checksum
+    expected_checksum=$(grep -E "^[a-f0-9]+[[:space:]]+${binary_name}$" "${tmp_dir}/checksums.txt" | awk '{print $1}')
+
+    if [[ -z "$expected_checksum" ]]; then
+        rm -rf "$tmp_dir"
+        error "Checksum for ${binary_name} not found in checksums.txt"
+    fi
+
+    local actual_checksum
+    actual_checksum=$(compute_sha256 "${tmp_dir}/${binary_name}")
+
+    if [[ "$actual_checksum" != "$expected_checksum" ]]; then
+        rm -rf "$tmp_dir"
+        error "Checksum verification failed. Expected: ${expected_checksum}, Got: ${actual_checksum}"
+    fi
+
+    success "Checksum verified"
 
     echo "${tmp_dir}/${binary_name}"
 }

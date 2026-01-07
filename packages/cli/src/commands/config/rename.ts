@@ -31,7 +31,7 @@ export async function executeRenameCommand(
             logger.fail(
                 `A connection with the name '${newName}' already exists.`
             );
-            process.exit(1);
+            return;
         }
         newNameToSet = newName;
     } else {

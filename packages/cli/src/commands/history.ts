@@ -5,9 +5,9 @@ import { executeHistoryListCommand } from "./history/list.js";
 
 export type HistoryOptions = {
     action: "list" | "clear";
-    limit?: number | undefined;
-    type?: OperationType | undefined;
-    format?: "table" | "json" | undefined;
+    limit?: number;
+    type?: OperationType;
+    format?: "table" | "json";
 };
 
 export async function executeHistoryCommand(

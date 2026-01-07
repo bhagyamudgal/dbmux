@@ -5,9 +5,9 @@ import { logger } from "../../utils/logger.js";
 import type { DumpHistoryEntry, OperationType } from "@dbmux/types/database";
 
 export type HistoryListOptions = {
-    limit?: number | undefined;
-    type?: OperationType | undefined;
-    format?: "table" | "json" | undefined;
+    limit?: number;
+    type?: OperationType;
+    format?: "table" | "json";
 };
 
 function formatFileSize(bytes: number): string {
