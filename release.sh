@@ -74,17 +74,37 @@ LATEST_COMMIT=$(git rev-parse HEAD)
 # Use GitHub CLI if available to check CI status
 if command -v gh >/dev/null 2>&1; then
     echo "Checking CI status using GitHub CLI..."
-    CI_STATUS=$(gh run list --commit="$LATEST_COMMIT" --limit=1 --json conclusion --jq '.[0].conclusion // "pending"')
+    CI_STATUS=$(gh run list --commit="$LATEST_COMMIT" --workflow=ci.yml --limit=1 --json conclusion --jq '.[0].conclusion // "none"')
 
-    if [ "$CI_STATUS" != "success" ]; then
+    if [ "$CI_STATUS" = "success" ]; then
+        echo "CI has passed for the latest commit"
+    elif [ "$CI_STATUS" = "none" ] || [ "$CI_STATUS" = "null" ] || [ -z "$CI_STATUS" ]; then
+        echo "Warning: No CI run found for the latest commit."
+        echo "This may happen if you just pushed and CI hasn't started yet."
+        echo ""
+        read -p "Do you want to proceed without CI verification? (y/N): " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Release cancelled. Please wait for CI to complete."
+            exit 1
+        fi
+    elif [ "$CI_STATUS" = "in_progress" ] || [ "$CI_STATUS" = "queued" ] || [ "$CI_STATUS" = "pending" ]; then
+        echo "Warning: CI is still running for the latest commit."
+        echo "CI Status: $CI_STATUS"
+        echo ""
+        read -p "Do you want to proceed without waiting for CI? (y/N): " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Release cancelled. Please wait for CI to complete."
+            exit 1
+        fi
+    else
         echo "Error: CI has not passed for the latest commit!"
         echo "CI Status: $CI_STATUS"
         echo "Please wait for CI to pass or fix any failing tests before releasing."
         echo "Check: https://github.com/bhagyamudgal/dbmux/actions"
         exit 1
     fi
-
-    echo "CI has passed for the latest commit"
 else
     echo "Warning: GitHub CLI not found. Cannot verify CI status automatically."
     echo "Please manually verify CI has passed at: https://github.com/bhagyamudgal/dbmux/actions"
