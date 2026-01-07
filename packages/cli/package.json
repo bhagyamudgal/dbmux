@@ -41,8 +41,6 @@
     "dependencies": {
         "@drizzle-team/brocli": "^0.11.0",
         "@inquirer/prompts": "^7.6.0",
-        "@dbmux/types": "workspace:*",
-        "@dbmux/utils": "workspace:*",
         "chalk": "^5.4.1",
         "cli-table3": "^0.6.5",
         "command-exists": "^1.2.9",
@@ -52,6 +50,8 @@
     "devDependencies": {
         "@dbmux/eslint-config": "workspace:*",
         "@dbmux/typescript-config": "workspace:*",
+        "@dbmux/types": "workspace:*",
+        "@dbmux/utils": "workspace:*",
         "@types/command-exists": "^1.2.3",
         "@types/node": "^24.0.10",
         "@types/pg": "^8.15.4",
@@ -62,17 +62,19 @@
         "vitest": "^3.2.4"
     },
     "keywords": [
+        "dbmux",
         "cli",
         "database",
         "postgresql",
         "postgres",
         "sql",
-        "management",
-        "query",
-        "typescript",
-        "brocli"
+        "db",
+        "dump",
+        "restore",
+        "backup",
+        "management"
     ],
-    "author": "",
+    "author": "Bhagya Mudgal <bhagyamudgal@gmail.com>",
     "license": "MIT",
     "engines": {
         "node": ">=22.0.0"
