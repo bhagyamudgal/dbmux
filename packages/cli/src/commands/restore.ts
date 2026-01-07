@@ -54,6 +54,20 @@ function resolveDumpFilePath(filePath: string): string | null {
     return null;
 }
 
+/**
+ * Run the interactive restore workflow to restore a database from a dump file.
+ *
+ * Validates required external commands and connection configuration, resolves or prompts for a dump file (from path, dumps directory, or history), verifies the dump format, selects or creates the target database (optionally dropping an existing database), prompts for final confirmation, executes the restore, and records the outcome in dump history while logging progress. On critical failures or when the operation is cancelled, the process may be terminated.
+ *
+ * @param options - Restore options that control behavior and non-interactive overrides:
+ *   - file: optional path to a dump file to restore
+ *   - database: optional target database name
+ *   - connection: optional connection name to use
+ *   - create: if true, create the target database before restoring
+ *   - drop: if true, drop the existing target database before restoring
+ *   - verbose: enable verbose restore output
+ *   - fromHistory: if true, select the dump from recent successful dump history
+ */
 export async function executeRestoreCommand(
     options: RestoreOptions
 ): Promise<void> {

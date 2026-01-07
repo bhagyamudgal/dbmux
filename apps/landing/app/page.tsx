@@ -1,3 +1,8 @@
+/**
+ * Render the DBMux landing page showcasing installation commands and key features.
+ *
+ * @returns A React element representing the DBMux CLI landing page layout.
+ */
 export default function Home() {
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">

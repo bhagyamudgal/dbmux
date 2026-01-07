@@ -16,6 +16,16 @@ import { logger } from "../utils/logger.js";
 import { promptForConnectionDetails } from "../utils/prompt.js";
 import { setActiveConnection } from "../utils/session.js";
 
+/**
+ * Format a last-connected timestamp as a concise human-readable relative time.
+ *
+ * Returns "never" if no timestamp is provided; "just now" for times less than one minute ago;
+ * "{n}m ago" for minutes (<60); "{n}h ago" for hours (<24); "{n}d ago" for days (<7);
+ * otherwise returns the date formatted with toLocaleDateString().
+ *
+ * @param timestamp - An optional timestamp string (any value accepted by the `Date` constructor)
+ * @returns A formatted relative time string such as "never", "just now", "5m ago", "3h ago", "2d ago", or a locale date string
+ */
 function formatLastConnected(timestamp?: string): string {
     if (!timestamp) return "never";
 
@@ -194,6 +204,13 @@ export type ConnectOptions = {
     test?: boolean;
 };
 
+/**
+ * Coordinate creating, loading, optionally saving, testing, and establishing a database connection using the provided options or interactive prompts.
+ *
+ * Attempts to load a saved connection by name, construct a connection from a URL or direct options, or fall back to an interactive prompt. Prompts the user to save newly created connections, updates active connection state and last-used metadata, tests connectivity, and—unless running in test mode—establishes the connection and closes it on completion.
+ *
+ * @param options - Connection input and control flags (e.g., `name`, `url`, `host`, `user`, `database`). If `options.test` is true, the function only performs a connection test and does not establish or persist a live connection.
+ */
 export async function executeConnectCommand(options: ConnectOptions) {
     logger.info("Attempting to connect to database...");
 

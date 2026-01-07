@@ -29,6 +29,13 @@ type PackageJson = {
     description: string;
 };
 
+/**
+ * Retrieve package metadata for the CLI.
+ *
+ * Attempts to read and parse the package.json located one directory above this file; if reading or parsing fails (e.g., in compiled binaries), returns a built-in fallback object.
+ *
+ * @returns PackageJson containing `name`, `version`, and `description` — from package.json when available, otherwise a fallback value.
+ */
 function getPackageInfo(): PackageJson {
     try {
         const packagePath = join(__dirname, "..", "package.json");

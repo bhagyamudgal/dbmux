@@ -99,6 +99,14 @@ export async function promptForConnectionDetails(): Promise<ConnectionConfig> {
     }
 }
 
+/**
+ * Prompts the user for a database URL, validates and parses it, and returns a ConnectionConfig.
+ *
+ * The returned config is populated from the parsed URL and, for non-SQLite databases,
+ * supplemented with driver defaults where host, port, or ssl are not provided in the URL.
+ *
+ * @returns A ConnectionConfig constructed from the parsed URL and applicable driver defaults.
+ */
 async function promptForUrlConnection(): Promise<ConnectionConfig> {
     const url = await input({
         message: "Enter database URL:",
@@ -142,6 +150,13 @@ async function promptForUrlConnection(): Promise<ConnectionConfig> {
     return config;
 }
 
+/**
+ * Prompts the user to select a database type and interactively collect the corresponding connection details.
+ *
+ * For SQLite, prompts for a file path. For other database types, prompts for host, port (validated to be between 1 and 65535), user, optional password, database name (defaults to "postgres" for PostgreSQL), and whether to use SSL (defaulting to driver defaults).
+ *
+ * @returns A ConnectionConfig object populated with the user's inputs.
+ */
 async function promptForFieldConnection(): Promise<ConnectionConfig> {
     const type = (await select({
         message: "Select database type:",

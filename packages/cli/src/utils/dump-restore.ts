@@ -5,10 +5,22 @@ import type { ConnectionConfig } from "@dbmux/types/database";
 import { DUMPS_DIR } from "@dbmux/utils/constants";
 import { logger } from "./logger.js";
 
+/**
+ * Escapes single quotes in a string for safe inclusion in SQL string literals.
+ *
+ * @param value - The string to escape for use inside a SQL string literal
+ * @returns The input string with each single quote replaced by two single quotes
+ */
 function escapeSqlString(value: string): string {
     return value.replace(/'/g, "''");
 }
 
+/**
+ * Wraps an SQL identifier in double quotes and escapes any embedded double quotes.
+ *
+ * @param name - The identifier (for example, a table or column name)
+ * @returns The identifier enclosed in double quotes with internal double quotes doubled
+ */
 function escapeSqlIdentifier(name: string): string {
     return `"${name.replace(/"/g, '""')}"`;
 }
@@ -355,6 +367,13 @@ export async function verifyDumpFile(filePath: string): Promise<boolean> {
     }
 }
 
+/**
+ * Create a new PostgreSQL database on the configured server.
+ *
+ * @param connection - Connection settings used to run the CREATE DATABASE command
+ * @param databaseName - Name of the database to create; treated and escaped as an SQL identifier
+ * @throws Error when the underlying psql command fails
+ */
 export async function createDatabase(
     connection: ConnectionConfig,
     databaseName: string
@@ -390,6 +409,16 @@ export async function createDatabase(
     logger.success(`Database '${databaseName}' created successfully`);
 }
 
+/**
+ * Terminates active connections to a database, drops it if it exists, and then recreates it.
+ *
+ * Terminates all other backend connections to the target database, runs `DROP DATABASE IF EXISTS`
+ * and then creates a fresh database with the given name.
+ *
+ * @param connection - Connection configuration used to run the admin commands
+ * @param databaseName - Name of the database to drop and recreate
+ * @throws Error if the drop database command fails
+ */
 export async function dropAndRecreateDatabase(
     connection: ConnectionConfig,
     databaseName: string

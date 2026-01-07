@@ -13,25 +13,29 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m' # info prints an informational message prefixed with a blue [INFO] tag.
 
 info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
 
+# success prints a green "[SUCCESS]" prefix followed by the provided message to stdout.
 success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
+# warn prints a yellow "[WARN]" prefixed warning message to stdout.
 warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
+# error prints an error message prefixed with `[ERROR]` (in red) and exits the script with status 1.
 error() {
     echo -e "${RED}[ERROR]${NC} $1"
     exit 1
 }
 
+# detect_platform determines the host OS and CPU architecture, enforces supported combinations, and echoes a platform identifier in the form `os-arch` (e.g., `linux-x64`).
 detect_platform() {
     local os arch
 
@@ -73,6 +77,8 @@ detect_platform() {
     echo "${os}-${arch}"
 }
 
+# get_latest_version retrieves the latest GitHub release tag for ${REPO} and echoes it.
+# It calls error() and exits if the version cannot be determined.
 get_latest_version() {
     local version
     version=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
@@ -84,6 +90,8 @@ get_latest_version() {
     echo "$version"
 }
 
+# download_binary downloads the release binary for the given platform and version into a temporary directory and echoes the downloaded file path.
+# It accepts `platform` (e.g., linux-x64, darwin-arm64, windows-x64) and `version` (release tag like v1.2.3); on failure it removes the temp dir and calls error().
 download_binary() {
     local platform="$1"
     local version="$2"
@@ -124,6 +132,7 @@ download_binary() {
     echo "${tmp_dir}/${binary_name}"
 }
 
+# install_binary moves the downloaded binary into INSTALL_DIR, appends `.exe` when the platform indicates Windows, makes the target executable, and uses sudo if the install directory is not writable.
 install_binary() {
     local binary_path="$1"
     local platform="$2"
@@ -147,6 +156,9 @@ install_binary() {
     success "Installed dbmux to ${target_path}"
 }
 
+# verify_installation checks whether `dbmux` is available on the user's PATH and reports readiness.
+# If `dbmux` is found, prints the detected version and short usage hints. If not found, advises how
+# to add INSTALL_DIR to the PATH or how to run the installed binary directly.
 verify_installation() {
     if command -v dbmux &> /dev/null; then
         local version
@@ -167,12 +179,15 @@ verify_installation() {
     fi
 }
 
+# check_prerequisites checks that `curl` is installed and exits with an error if it is missing.
 check_prerequisites() {
     if ! command -v curl &> /dev/null; then
         error "curl is required but not installed. Please install curl first."
     fi
 }
 
+# main runs the installer flow for the dbmux CLI: it checks prerequisites, detects the host platform and architecture, fetches the latest release tag, downloads the matching prebuilt binary, installs it into INSTALL_DIR, removes temporary files, and verifies the installation.
+# On success the dbmux executable is placed in INSTALL_DIR and a readiness message is printed; the function exits with a non-zero status on failure.
 main() {
     echo ""
     echo "  ____  ____  __  __ _   ___  __"

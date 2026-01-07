@@ -2,6 +2,15 @@ import { input, select } from "@inquirer/prompts";
 import { listConnections, renameConnection } from "../../utils/config.js";
 import { logger } from "../../utils/logger.js";
 
+/**
+ * Rename a saved connection, prompting for any missing input and validating name conflicts.
+ *
+ * If `oldName` is omitted or not found, prompts the user to select a connection to rename.
+ * If `newName` is omitted, prompts the user for a new name and ensures it does not duplicate an existing connection.
+ *
+ * @param oldName - Optional existing connection name to rename; when provided and valid, selection prompt is skipped.
+ * @param newName - Optional new name to set; when provided, the command fails if that name already exists.
+ */
 export async function executeRenameCommand(
     oldName?: string,
     newName?: string

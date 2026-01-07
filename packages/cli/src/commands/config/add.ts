@@ -5,6 +5,12 @@ import { logger } from "../../utils/logger.js";
 import { promptForConnectionDetails } from "../../utils/prompt.js";
 import type { ConnectionConfig } from "@dbmux/types/database";
 
+/**
+ * Interactively adds a new database connection by prompting for details, testing the connection, and saving it if valid.
+ *
+ * Prompts the user for connection details, verifies connectivity, and, if the test succeeds, prompts for or
+ * computes a connection name and persists the configuration.
+ */
 export async function executeAddCommand(): Promise<void> {
     logger.info("Adding a new database connection interactively.");
 

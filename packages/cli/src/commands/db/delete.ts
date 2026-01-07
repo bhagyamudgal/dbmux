@@ -18,6 +18,21 @@ export class DbDeleteError extends Error {
     }
 }
 
+/**
+ * Delete a PostgreSQL database, prompting for selection and confirmations when needed.
+ *
+ * Attempts to resolve the named connection, ensures it is PostgreSQL, selects or verifies
+ * the target database, optionally prompts for two confirmations (unless `force` is set),
+ * terminates active connections to the target database and then drops it.
+ *
+ * @param options - Operation options:
+ *   - `database`: optional database name to delete (if omitted, the user is prompted);
+ *   - `connection`: optional connection name to use (if omitted, the default/current connection is used);
+ *   - `force`: if `true`, skip confirmation prompts and proceed with deletion.
+ * @throws {DbDeleteError} When no connection is found, the connection type is unsupported,
+ *                         the specified database does not exist, no databases exist, or only system
+ *                         databases exist (making selection impossible).
+ */
 export async function executeDbDeleteCommand(
     options: DbDeleteOptions
 ): Promise<void> {
