@@ -655,7 +655,3 @@ DBMux uses a driver-based architecture for database operations:
 3. Make your changes
 4. Run tests: `bun run test`
 5. Submit a pull request
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
