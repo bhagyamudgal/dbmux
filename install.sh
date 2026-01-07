@@ -16,19 +16,19 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    echo -e "${BLUE}[INFO]${NC} $1" >&2
 }
 
 success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}[SUCCESS]${NC} $1" >&2
 }
 
 warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    echo -e "${YELLOW}[WARN]${NC} $1" >&2
 }
 
 error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[ERROR]${NC} $1" >&2
     exit 1
 }
 
@@ -129,7 +129,7 @@ download_binary() {
 
     info "Downloading ${binary_name} from ${version}..."
 
-    if ! curl -fsSL "$download_url" -o "${tmp_dir}/${binary_name}"; then
+    if ! curl -fL --progress-bar "$download_url" -o "${tmp_dir}/${binary_name}"; then
         rm -rf "$tmp_dir"
         error "Failed to download binary. Please check if the release exists."
     fi
