@@ -47,7 +47,7 @@ export function Installation() {
                             (method) => (
                                 <TabsContent key={method} value={method}>
                                     <div className="relative rounded-xl border border-border bg-card p-6 shadow-sm">
-                                        <pre className="overflow-x-auto font-mono text-sm text-foreground">
+                                        <pre className="overflow-hidden truncate pr-12 font-mono text-sm text-foreground">
                                             <code>
                                                 {INSTALL_COMMANDS[method]}
                                             </code>
@@ -55,7 +55,7 @@ export function Installation() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="absolute top-4 right-4 h-8 w-8 text-muted-foreground transition-colors hover:text-foreground"
+                                            className="absolute top-4 right-4 h-8 w-8 rounded-md bg-card/80 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                                             onClick={() =>
                                                 copyToClipboard(method)
                                             }
