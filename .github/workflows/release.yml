@@ -27,7 +27,6 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: "22"
-                  registry-url: "https://registry.npmjs.org"
 
             - name: Cache Bun dependencies
               uses: actions/cache@v4
@@ -55,10 +54,6 @@ jobs:
             - name: Get version from tag
               id: get_version
               run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-            - name: Publish to npm (Trusted Publishing)
-              run: npm publish --provenance --access public
-              working-directory: packages/cli
 
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v2
@@ -109,3 +104,7 @@ jobs:
                       packages/cli/binaries/dbmux-darwin-arm64
                       packages/cli/binaries/dbmux-windows-x64.exe
                       packages/cli/binaries/checksums.txt
+
+            - name: Publish to npm (Trusted Publishing)
+              run: npm publish --provenance --access public
+              working-directory: packages/cli
