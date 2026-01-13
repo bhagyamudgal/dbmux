@@ -60,8 +60,7 @@ describe("createSpinner", () => {
         spinner.update("Updated text");
         vi.advanceTimersByTime(100);
 
-        const lastCall =
-            mockWrite.mock.calls[mockWrite.mock.calls.length - 1][0];
+        const lastCall = mockWrite.mock.calls.at(-1)?.[0] as string;
         expect(lastCall).toContain("Updated text");
 
         spinner.stop();
