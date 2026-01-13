@@ -4,6 +4,7 @@ import { basename, extname, isAbsolute, join } from "path";
 import type { ConnectionConfig } from "@dbmux/types/database";
 import { DUMPS_DIR } from "@dbmux/utils/constants";
 import { logger } from "./logger.js";
+import { createSpinner } from "./spinner.js";
 
 function escapeSqlString(value: string): string {
     return value.replace(/'/g, "''");
@@ -11,6 +12,49 @@ function escapeSqlString(value: string): string {
 
 function escapeSqlIdentifier(name: string): string {
     return `"${name.replace(/"/g, '""')}"`;
+}
+
+function formatFileSize(bytes: number): string {
+    if (bytes < 1024) {
+        return `${bytes} B`;
+    } else if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    } else if (bytes < 1024 * 1024 * 1024) {
+        return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+function getDirectorySize(dirPath: string): number {
+    if (!existsSync(dirPath)) return 0;
+
+    const stats = statSync(dirPath);
+    if (!stats.isDirectory()) {
+        return stats.size;
+    }
+
+    let totalSize = 0;
+    const files = readdirSync(dirPath);
+    for (const file of files) {
+        const filePath = join(dirPath, file);
+        const fileStats = statSync(filePath);
+        if (fileStats.isDirectory()) {
+            totalSize += getDirectorySize(filePath);
+        } else {
+            totalSize += fileStats.size;
+        }
+    }
+    return totalSize;
+}
+
+function getOutputSize(outputPath: string, isDirectory: boolean): number {
+    if (!existsSync(outputPath)) return 0;
+
+    if (isDirectory) {
+        return getDirectorySize(outputPath);
+    }
+
+    return statSync(outputPath).size;
 }
 
 export type DumpOptions = {
@@ -155,6 +199,101 @@ export async function executeCommandWithProgress(
     });
 }
 
+type SpinnerProgressOptions = {
+    outputPath: string;
+    isDirectory: boolean;
+    baseMessage: string;
+    pollInterval?: number;
+};
+
+export async function executeCommandWithSpinner(
+    command: string,
+    args: string[],
+    env?: Record<string, string>,
+    progressOptions?: SpinnerProgressOptions
+): Promise<{ success: boolean; output: string; error: string }> {
+    const spinner = progressOptions
+        ? createSpinner({ text: progressOptions.baseMessage, color: "cyan" })
+        : null;
+
+    let pollIntervalId: ReturnType<typeof setInterval> | null = null;
+
+    if (progressOptions && spinner) {
+        const {
+            outputPath,
+            isDirectory,
+            baseMessage,
+            pollInterval = 250,
+        } = progressOptions;
+
+        pollIntervalId = setInterval(() => {
+            const size = getOutputSize(outputPath, isDirectory);
+            if (size > 0) {
+                spinner.update(`${baseMessage} ${formatFileSize(size)}`);
+            }
+        }, pollInterval);
+    }
+
+    return new Promise((resolve) => {
+        const childProcess = spawn(command, args, {
+            env: { ...process.env, ...env },
+            stdio: ["ignore", "pipe", "pipe"],
+        });
+
+        let stdout = "";
+        let stderr = "";
+
+        childProcess.stdout?.on("data", (data: Buffer) => {
+            stdout += data.toString();
+        });
+
+        childProcess.stderr?.on("data", (data: Buffer) => {
+            stderr += data.toString();
+        });
+
+        childProcess.on("close", (code: number | null) => {
+            if (pollIntervalId) {
+                clearInterval(pollIntervalId);
+            }
+
+            if (spinner && progressOptions) {
+                const finalSize = getOutputSize(
+                    progressOptions.outputPath,
+                    progressOptions.isDirectory
+                );
+
+                if (code === 0) {
+                    spinner.succeed(
+                        `${progressOptions.baseMessage} ${formatFileSize(finalSize)}`
+                    );
+                } else {
+                    spinner.fail(progressOptions.baseMessage);
+                }
+            }
+
+            resolve({
+                success: code === 0,
+                output: stdout,
+                error: stderr,
+            });
+        });
+
+        childProcess.on("error", (error) => {
+            if (pollIntervalId) {
+                clearInterval(pollIntervalId);
+            }
+            if (spinner) {
+                spinner.fail(`Failed to execute ${command}`);
+            }
+            resolve({
+                success: false,
+                output: stdout,
+                error: error.message,
+            });
+        });
+    });
+}
+
 export async function createDatabaseDump(
     connection: ConnectionConfig,
     options: DumpOptions
@@ -162,6 +301,7 @@ export async function createDatabaseDump(
     const outputFile =
         options.outputFile || generateDumpFilename(options.database);
     const outputPath = getDumpOutputPath(outputFile);
+    const isDirectoryFormat = options.format === "directory";
 
     logger.info(`Creating database dump for '${options.database}'`);
     logger.info(`Output file: ${outputFile}`);
@@ -196,7 +336,12 @@ export async function createDatabaseDump(
         env.PGPASSWORD = connection.password;
     }
 
-    const result = await executeCommand("pg_dump", args, env);
+    const result = await executeCommandWithSpinner("pg_dump", args, env, {
+        outputPath,
+        isDirectory: isDirectoryFormat,
+        baseMessage: "Dumping...",
+        pollInterval: 250,
+    });
 
     if (!result.success) {
         throw new Error(`pg_dump failed: ${result.error}`);
@@ -206,16 +351,14 @@ export async function createDatabaseDump(
         throw new Error("Dump file was not created");
     }
 
-    const stats = statSync(outputPath);
-    const fileSizeMB = (stats.size / (1024 * 1024)).toFixed(2);
+    const finalSize = getOutputSize(outputPath, isDirectoryFormat);
 
-    logger.success("Database dump completed successfully");
-    logger.info(`File size: ${fileSizeMB} MB`);
-    logger.info(`Location: ${outputPath}`);
+    logger.info(`File: ${outputFile}`);
+    logger.info(`Directory: ${DUMPS_DIR}`);
 
     return {
         path: outputPath,
-        size: stats.size,
+        size: finalSize,
     };
 }
 
