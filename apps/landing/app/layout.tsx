@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -74,6 +75,7 @@ export default function RootLayout({
                 className={`${ibmPlexSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
             >
                 <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
+                <Analytics />
             </body>
         </html>
     );
