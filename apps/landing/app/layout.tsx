@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+// eslint-disable-next-line camelcase -- next/font exports use font family names with underscores
 import { IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/theme-provider";
