@@ -10,10 +10,10 @@ export default function Home() {
     return (
         <div className="relative min-h-screen">
             <BGPattern
-                variant="grid"
+                variant="dots"
                 mask="fade-edges"
-                size={48}
-                fill="var(--border)"
+                size={32}
+                fill="oklch(0.72 0.19 145 / 0.06)"
             />
             <Header />
             <main>

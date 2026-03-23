@@ -19,7 +19,7 @@ export function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
+        <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary/10 bg-background/80 backdrop-blur-md">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-20 items-center justify-between">
                     <Link href="/">
@@ -31,7 +31,7 @@ export function Header() {
                             <a
                                 key={link.href}
                                 href={link.href}
-                                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                className="text-sm text-muted-foreground transition-colors hover:text-primary"
                             >
                                 {link.label}
                             </a>
@@ -95,7 +95,7 @@ export function Header() {
                             <a
                                 key={link.href}
                                 href={link.href}
-                                className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {link.label}

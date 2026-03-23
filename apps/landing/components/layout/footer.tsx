@@ -49,7 +49,7 @@ const footerLinks: FooterLinks = {
 
 export function Footer() {
     return (
-        <footer className="border-t border-border bg-background">
+        <footer className="border-t border-primary/10 bg-background dark:shadow-[0_-1px_20px_var(--glow-green)]">
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
                 <div className="flex flex-col justify-between gap-12 lg:flex-row">
                     <div className="max-w-xs">
@@ -71,7 +71,7 @@ export function Footer() {
                                     <li key={link.href}>
                                         <a
                                             href={link.href}
-                                            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                            className="text-sm text-muted-foreground transition-colors hover:text-primary"
                                         >
                                             {link.label}
                                         </a>
@@ -91,7 +91,7 @@ export function Footer() {
                                             href={link.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                            className="text-sm text-muted-foreground transition-colors hover:text-primary"
                                         >
                                             {link.label}
                                         </a>
@@ -111,7 +111,7 @@ export function Footer() {
                                             href={link.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
                                         >
                                             {link.icon && (
                                                 <link.icon className="h-4 w-4" />

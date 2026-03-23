@@ -19,7 +19,8 @@ This project is organized as a Turborepo monorepo:
 ```
 dbmux/
 ├── apps/
-│   └── landing/                  # Next.js landing page + docs
+│   ├── landing/                  # Next.js landing page
+│   └── video/                    # Remotion video compositions
 ├── packages/
 │   ├── cli/                      # Main CLI (publishes as 'dbmux' on npm)
 │   ├── types/                    # @dbmux/types - shared type definitions
@@ -123,19 +124,19 @@ dbmux connect -n my-saved-connection
 dbmux connect --url "postgresql://..." --test
 ```
 
-| Option       | Alias | Description                            | Default      |
-| ------------ | ----- | -------------------------------------- | ------------ |
-| `--url`      | `-U`  | Database URL                           | -            |
-| `--type`     |       | Database type (`postgresql`, `sqlite`) | `postgresql` |
-| `--name`     | `-n`  | Connection name for saving/loading     | auto-gen     |
-| `--host`     | `-H`  | Database host                          | `localhost`  |
-| `--port`     | `-p`  | Database port (1-65535)                | `5432`       |
-| `--user`     | `-u`  | Database username                      | -            |
-| `--password` | `-w`  | Database password                      | prompt       |
-| `--database` | `-d`  | Database name                          | -            |
-| `--ssl`      |       | Use SSL connection                     | `false`      |
-| `--save`     |       | Save connection configuration          | `true`       |
-| `--test`     |       | Test connection only (don't establish) | `false`      |
+| Option       | Alias | Description                                     | Default      |
+| ------------ | ----- | ----------------------------------------------- | ------------ |
+| `--url`      | `-U`  | Database URL                                    | -            |
+| `--type`     |       | Database type (`postgresql`, `mysql`, `sqlite`) | `postgresql` |
+| `--name`     | `-n`  | Connection name for saving/loading              | auto-gen     |
+| `--host`     | `-H`  | Database host                                   | `localhost`  |
+| `--port`     | `-p`  | Database port (1-65535)                         | `5432`       |
+| `--user`     | `-u`  | Database username                               | -            |
+| `--password` | `-w`  | Database password                               | prompt       |
+| `--database` | `-d`  | Database name                                   | -            |
+| `--ssl`      |       | Use SSL connection                              | `false`      |
+| `--save`     |       | Save connection configuration                   | `true`       |
+| `--test`     |       | Test connection only (don't establish)          | `false`      |
 
 ### `list` - List Resources
 
@@ -564,56 +565,6 @@ cd packages/cli && bun run test:watch
 cd packages/cli && bun run coverage
 ```
 
-### CLI Package Structure
-
-```
-packages/cli/
-├── src/
-│   ├── commands/              # Command implementations
-│   │   ├── config/            # Config subcommands
-│   │   │   ├── add.ts
-│   │   │   ├── default.ts
-│   │   │   ├── list.ts
-│   │   │   ├── manage.ts
-│   │   │   ├── path.ts
-│   │   │   ├── remove.ts
-│   │   │   ├── rename.ts
-│   │   │   └── show.ts
-│   │   ├── db/                # Database subcommands
-│   │   │   └── delete.ts
-│   │   ├── history/           # History subcommands
-│   │   │   ├── clear.ts
-│   │   │   └── list.ts
-│   │   ├── config.ts
-│   │   ├── connect.ts
-│   │   ├── db.ts
-│   │   ├── disconnect.ts
-│   │   ├── dump.ts
-│   │   ├── dump-delete.ts
-│   │   ├── history.ts
-│   │   ├── list.ts
-│   │   ├── query.ts
-│   │   ├── restore.ts
-│   │   └── status.ts
-│   ├── db-drivers/            # Database drivers
-│   │   ├── database-driver.ts # Driver interface
-│   │   ├── driver-factory.ts  # Driver factory
-│   │   └── postgres-driver.ts # PostgreSQL implementation
-│   ├── utils/                 # Utilities
-│   │   ├── command-check.ts
-│   │   ├── command-runner.ts
-│   │   ├── config.ts
-│   │   ├── database.ts
-│   │   ├── dump-restore.ts
-│   │   ├── logger.ts
-│   │   ├── prompt.ts
-│   │   └── session.ts
-│   └── index.ts               # CLI entry point
-├── tests/                     # Test files
-├── package.json
-└── tsconfig.json
-```
-
 ## Architecture
 
 DBMux uses a driver-based architecture for database operations:
@@ -628,25 +579,6 @@ DBMux uses a driver-based architecture for database operations:
 2. Implement `DatabaseDriver` interface
 3. Register in `driver-factory.ts`
 4. Add type to `@dbmux/types`
-
-## Dependencies
-
-**Runtime:**
-
-- `@drizzle-team/brocli` - CLI framework
-- `pg` - PostgreSQL client
-- `cli-table3` - Table formatting
-- `@inquirer/prompts` - Interactive prompts
-- `chalk` - Colored output
-- `command-exists` - External command checking
-
-**Development:**
-
-- `typescript` - Type safety
-- `vitest` - Testing framework
-- `eslint` + `typescript-eslint` - Linting
-- `prettier` - Code formatting
-- `turbo` - Monorepo build system
 
 ## Contributing
 

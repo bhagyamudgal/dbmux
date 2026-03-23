@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { Noto_Sans as notoSansFont } from "next/font/google";
+import { IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
-const notoSans = notoSansFont({
+const ibmPlexSans = IBM_Plex_Sans({
     subsets: ["latin"],
     variable: "--font-sans",
+    weight: ["300", "400", "500", "600", "700"],
+    display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+    subsets: ["latin"],
+    variable: "--font-mono",
     display: "swap",
 });
 
@@ -46,7 +53,9 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className="dark" suppressHydrationWarning>
-            <body className={`${notoSans.variable} font-sans antialiased`}>
+            <body
+                className={`${ibmPlexSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+            >
                 <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
             </body>
         </html>
