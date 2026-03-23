@@ -36,7 +36,7 @@ Turborepo monorepo with Bun workspaces:
 
 ## Architecture
 
-DBMux is a TypeScript CLI built with Bun runtime and a driver-based architecture for multi-database support.
+dbmux is a TypeScript CLI built with Bun runtime and a driver-based architecture for multi-database support.
 
 ### Core Components (all under `packages/cli/src/`)
 

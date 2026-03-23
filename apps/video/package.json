@@ -1,0 +1,29 @@
+{
+    "name": "@dbmux/video",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "studio": "remotion studio",
+        "render": "remotion render Demo out/demo.mp4 --codec h264",
+        "render:social": "remotion render SocialTeaser out/social-teaser.mp4 --codec h264",
+        "render:banner": "remotion render GitHubBanner out/github-banner.mp4 --codec h264",
+        "render:banner:gif": "remotion render GitHubBanner out/github-banner.gif",
+        "render:all": "npm run render && npm run render:social && npm run render:banner",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@remotion/cli": "4.0.438",
+        "@remotion/google-fonts": "4.0.438",
+        "@remotion/tailwind-v4": "4.0.438",
+        "@remotion/webcodecs": "4.0.438",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "remotion": "4.0.438",
+        "tailwindcss": "^4.0.0"
+    },
+    "devDependencies": {
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "typescript": "^5.7.0"
+    }
+}

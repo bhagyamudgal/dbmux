@@ -64,7 +64,7 @@ jobs:
                   tag_name: ${{ github.ref_name }}
                   name: Release ${{ steps.get_version.outputs.VERSION }}
                   body: |
-                      ## DBMux ${{ steps.get_version.outputs.VERSION }}
+                      ## dbmux ${{ steps.get_version.outputs.VERSION }}
 
                       ### Installation
 

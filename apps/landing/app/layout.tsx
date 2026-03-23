@@ -17,6 +17,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+    icons: {
+        icon: [
+            { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+            { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        ],
+        apple: "/apple-touch-icon.png",
+    },
+    manifest: "/site.webmanifest",
     title: "dbmux - Database Backups Made Simple",
     description:
         "Skip the pg_dump syntax lookup. dbmux gives you simple commands with smart defaults, automatic history tracking, and organized dump files.",
@@ -37,12 +45,21 @@ export const metadata: Metadata = {
         type: "website",
         locale: "en_US",
         siteName: "dbmux",
+        images: [
+            {
+                url: "/og-image.png",
+                width: 1280,
+                height: 640,
+                alt: "dbmux - Database Backups Made Simple",
+            },
+        ],
     },
     twitter: {
         card: "summary_large_image",
         title: "dbmux - Database Backups Made Simple",
         description:
             "Skip the pg_dump syntax lookup. Simple commands with smart defaults, automatic history tracking, and organized dump files.",
+        images: ["/og-image.png"],
     },
 };
 

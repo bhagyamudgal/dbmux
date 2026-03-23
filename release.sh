@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Release script for DBMux
+# Release script for dbmux
 # Usage: ./release.sh [version]
 # Example: ./release.sh 1.0.6
 

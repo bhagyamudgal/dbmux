@@ -1,5 +1,9 @@
 # dbmux - Database Management CLI
 
+<p align="center">
+  <video src="https://cdn.dbmux.com/videos/github-banner.mp4" autoplay loop muted playsinline></video>
+</p>
+
 A flexible, modern database management CLI tool built with TypeScript and Bun. Supports multiple database systems through a driver-based architecture, with PostgreSQL as the primary implementation.
 
 ## Features
@@ -471,7 +475,7 @@ Clear the active connection session, reverting to the default connection.
 
 ## Configuration
 
-DBMux stores configuration in `~/.dbmux/config.json`:
+dbmux stores configuration in `~/.dbmux/config.json`:
 
 ```json
 {
@@ -567,7 +571,7 @@ cd packages/cli && bun run coverage
 
 ## Architecture
 
-DBMux uses a driver-based architecture for database operations:
+dbmux uses a driver-based architecture for database operations:
 
 - **`DatabaseDriver` Interface**: Contract for all database operations
 - **Driver Implementations**: Database-specific logic (PostgreSQL, SQLite, etc.)

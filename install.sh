@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# DBMux Installer
+# dbmux Installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/bhagyamudgal/dbmux/main/install.sh | bash
 
 REPO="bhagyamudgal/dbmux"
