@@ -1,7 +1,7 @@
 # dbmux - Database Management CLI
 
 <p align="center">
-  <video src="https://cdn.dbmux.com/videos/github-banner.mp4" autoplay loop muted playsinline></video>
+  <img src="https://cdn.dbmux.com/gifs/github-banner.gif" alt="dbmux demo" />
 </p>
 
 A flexible, modern database management CLI tool built with TypeScript and Bun. Supports multiple database systems through a driver-based architecture, with PostgreSQL as the primary implementation.
