@@ -70,10 +70,14 @@ jobs:
                   PACKAGE: ${{ steps.package.outputs.name }}
                   VERSION: ${{ steps.package.outputs.version }}
               run: |
-                  if npm view "$PACKAGE@$VERSION" version >/dev/null 2>&1; then
+                  if output=$(npm view "$PACKAGE@$VERSION" version 2>&1); then
                       echo "is-released=true" >> "$GITHUB_OUTPUT"
-                  else
+                  elif printf '%s\n' "$output" | grep -q "E404"; then
                       echo "is-released=false" >> "$GITHUB_OUTPUT"
+                  else
+                      printf '%s\n' "$output"
+                      echo "::error::Could not determine whether $PACKAGE@$VERSION is published"
+                      exit 1
                   fi
 
     publish:
