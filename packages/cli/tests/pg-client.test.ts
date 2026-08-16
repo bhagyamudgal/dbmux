@@ -109,6 +109,27 @@ describe("resolvePgClient", () => {
         );
     });
 
+    it("still finds a matching binary when the PATH client version is unreadable", async () => {
+        mockServerVersion(160004);
+        executeCommand.mockResolvedValue({
+            success: false,
+            output: "",
+            error: "command not found",
+        });
+        const matchedPath = "/usr/lib/postgresql/16/bin/pg_restore";
+        vi.mocked(existsSync).mockImplementation(
+            (path) => path === matchedPath
+        );
+
+        const client = await resolvePgClient("pg_restore");
+
+        expect(client).toEqual({
+            command: matchedPath,
+            clientMajorVersion: 16,
+            serverMajorVersion: 16,
+        });
+    });
+
     it("reads the major version of a pre-release client build", async () => {
         mockServerVersion(180000);
         mockToolVersion("18beta1");

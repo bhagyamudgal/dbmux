@@ -2,7 +2,7 @@ import type { ConnectionConfig } from "@dbmux/types/database";
 import { spawn } from "child_process";
 import { existsSync } from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { restoreDatabase } from "../src/utils/dump-restore";
+import { restoreDatabase, verifyDumpFile } from "../src/utils/dump-restore";
 
 const { resolvePgClient, logClientInstallHint } = vi.hoisted(() => ({
     resolvePgClient: vi.fn(),
@@ -142,5 +142,34 @@ describe("restoreDatabase client version guard", () => {
         expect(logger.info).toHaveBeenCalledWith(
             expect.stringContaining("newer pg_dump")
         );
+    });
+});
+
+describe("verifyDumpFile", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("lists the archive with the same client the restore will use", async () => {
+        const matchedPath = "/opt/homebrew/opt/postgresql@16/bin/pg_restore";
+        resolvePgClient.mockResolvedValue({
+            command: matchedPath,
+            clientMajorVersion: 16,
+            serverMajorVersion: 16,
+        });
+        executeCommand.mockResolvedValue({
+            success: true,
+            output: "",
+            error: "",
+        });
+
+        await expect(verifyDumpFile(RESTORE_OPTIONS.inputFile)).resolves.toBe(
+            true
+        );
+
+        expect(executeCommand).toHaveBeenCalledWith(matchedPath, [
+            "--list",
+            RESTORE_OPTIONS.inputFile,
+        ]);
     });
 });

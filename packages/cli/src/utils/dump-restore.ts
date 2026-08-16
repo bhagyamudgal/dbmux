@@ -483,8 +483,14 @@ export async function verifyDumpFile(filePath: string): Promise<boolean> {
             return false; // false means it's not custom format (but still valid)
         }
 
-        // For other formats (.dump, .tar, .gz), try to list contents
-        const result = await executeCommand("pg_restore", ["--list", filePath]);
+        // For other formats (.dump, .tar, .gz), try to list contents.
+        // Verifying with the same client the restore will use, since a client
+        // older than the archive rejects it outright.
+        const pgRestore = await resolvePgClient("pg_restore");
+        const result = await executeCommand(pgRestore.command, [
+            "--list",
+            filePath,
+        ]);
 
         if (result.success) {
             logger.success("Dump file verification passed (custom format)");

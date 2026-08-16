@@ -97,7 +97,6 @@ export async function resolvePgClient(
 
     if (
         serverMajorVersion === null ||
-        pathMajorVersion === null ||
         pathMajorVersion === serverMajorVersion
     ) {
         return {
@@ -120,8 +119,13 @@ export async function resolvePgClient(
         };
     }
 
+    const fallbackDescription =
+        pathMajorVersion === null
+            ? `${tool} from PATH`
+            : `${tool} ${pathMajorVersion} from PATH`;
+
     logger.warn(
-        `Local ${tool} is version ${pathMajorVersion} but the server is PostgreSQL ${serverMajorVersion}, and no matching client was found`
+        `No ${tool} matching PostgreSQL ${serverMajorVersion} was found; using ${fallbackDescription}`
     );
 
     return {
