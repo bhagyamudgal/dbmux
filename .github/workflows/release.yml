@@ -2,17 +2,86 @@ name: Release
 
 on:
     push:
-        tags:
-            - "v*"
+        branches:
+            - main
 
-permissions:
-    contents: write
-    id-token: write
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: false
 
 jobs:
-    release:
-        name: Build, Publish, and Release
+    version:
+        name: Open Version Pull Request
         runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+            pull-requests: write
+
+        outputs:
+            has-changesets: ${{ steps.changesets.outputs.has-changesets }}
+            version: ${{ steps.package.outputs.version }}
+            is-released: ${{ steps.released.outputs.is-released }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Cache Bun dependencies
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
+
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Collect changesets into a version pull request
+              id: changesets
+              uses: changesets/action@v2
+              with:
+                  commit-message: "chore: version packages"
+                  pr-title: "chore: version packages"
+
+            - name: Read the version on main
+              id: package
+              run: echo "version=$(node -p "require('./packages/cli/package.json').version")" >> "$GITHUB_OUTPUT"
+
+            # Every push to main without pending changesets reaches the publish
+            # job, so the existing tag is what distinguishes "the version pull
+            # request just merged" from "an unrelated commit landed".
+            - name: Check whether that version is already tagged
+              id: released
+              env:
+                  VERSION: ${{ steps.package.outputs.version }}
+              run: |
+                  if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+                      echo "is-released=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "is-released=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+    publish:
+        name: Publish and Release
+        needs: version
+        if: needs.version.outputs.has-changesets == 'false' && needs.version.outputs.is-released == 'false'
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+            id-token: write
+
+        env:
+            VERSION: ${{ needs.version.outputs.version }}
 
         steps:
             - name: Checkout code
@@ -54,17 +123,15 @@ jobs:
                   sha256sum -- * > checksums.txt
                   cat checksums.txt
 
-            - name: Get version from tag
-              id: get_version
-              run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v2
               with:
-                  tag_name: ${{ github.ref_name }}
-                  name: Release ${{ steps.get_version.outputs.VERSION }}
+                  tag_name: v${{ env.VERSION }}
+                  name: Release ${{ env.VERSION }}
                   body: |
-                      ## dbmux ${{ steps.get_version.outputs.VERSION }}
+                      ## dbmux ${{ env.VERSION }}
+
+                      See [CHANGELOG.md](https://github.com/bhagyamudgal/dbmux/blob/main/packages/cli/CHANGELOG.md) for what changed.
 
                       ### Installation
 
