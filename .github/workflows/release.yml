@@ -52,22 +52,32 @@ jobs:
                   commit-message: "chore: version packages"
                   pr-title: "chore: version packages"
 
-            - name: Read the version on main
+            - name: Read the package identity on main
               id: package
-              run: echo "version=$(node -p "require('./packages/cli/package.json').version")" >> "$GITHUB_OUTPUT"
+              run: |
+                  echo "name=$(node -p "require('./packages/cli/package.json').name")" >> "$GITHUB_OUTPUT"
+                  echo "version=$(node -p "require('./packages/cli/package.json').version")" >> "$GITHUB_OUTPUT"
 
             # Every push to main without pending changesets reaches the publish
-            # job, so the existing tag is what distinguishes "the version pull
-            # request just merged" from "an unrelated commit landed".
-            - name: Check whether that version is already tagged
+            # job, so this is what distinguishes "the version pull request just
+            # merged" from "an unrelated commit landed". The registry is the
+            # source of truth rather than the git tag, because the tag is
+            # created by the release step *before* npm publish runs — keying off
+            # it would lock out every retry of a publish that failed.
+            - name: Check whether that version is on npm
               id: released
               env:
+                  PACKAGE: ${{ steps.package.outputs.name }}
                   VERSION: ${{ steps.package.outputs.version }}
               run: |
-                  if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+                  if output=$(npm view "$PACKAGE@$VERSION" version 2>&1); then
                       echo "is-released=true" >> "$GITHUB_OUTPUT"
-                  else
+                  elif printf '%s\n' "$output" | grep -q "E404"; then
                       echo "is-released=false" >> "$GITHUB_OUTPUT"
+                  else
+                      printf '%s\n' "$output"
+                      echo "::error::Could not determine whether $PACKAGE@$VERSION is published"
+                      exit 1
                   fi
 
     publish:
