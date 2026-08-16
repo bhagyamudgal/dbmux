@@ -4,6 +4,12 @@ import { basename, extname, isAbsolute, join } from "path";
 import type { ConnectionConfig } from "@dbmux/types/database";
 import { DUMPS_DIR } from "@dbmux/utils/constants";
 import { logger } from "./logger.js";
+import {
+    logClientInstallHint,
+    resolvePgClient,
+    type PgClientResolution,
+} from "./pg-client.js";
+import { executeCommand } from "./process-runner.js";
 import { createSpinner } from "./spinner.js";
 
 function escapeSqlString(value: string): string {
@@ -122,38 +128,6 @@ export function generateDumpFilename(
     }
 
     return `${database}_backup_${timestamp}.dump`;
-}
-
-export async function executeCommand(
-    command: string,
-    args: string[],
-    env?: Record<string, string>
-): Promise<{ success: boolean; output: string; error: string }> {
-    return new Promise((resolve) => {
-        const childProcess = spawn(command, args, {
-            env: { ...process.env, ...env },
-            stdio: ["ignore", "pipe", "pipe"],
-        });
-
-        let stdout = "";
-        let stderr = "";
-
-        childProcess.stdout?.on("data", (data: Buffer) => {
-            stdout += data.toString();
-        });
-
-        childProcess.stderr?.on("data", (data: Buffer) => {
-            stderr += data.toString();
-        });
-
-        childProcess.on("close", (code: number | null) => {
-            resolve({
-                success: code === 0,
-                output: stdout,
-                error: stderr,
-            });
-        });
-    });
 }
 
 export async function executeCommandWithProgress(
@@ -336,7 +310,9 @@ export async function createDatabaseDump(
         env.PGPASSWORD = connection.password;
     }
 
-    const result = await executeCommandWithSpinner("pg_dump", args, env, {
+    const pgDump = await resolvePgClient("pg_dump");
+
+    const result = await executeCommandWithSpinner(pgDump.command, args, env, {
         outputPath,
         isDirectory: isDirectoryFormat,
         baseMessage: "Dumping...",
@@ -362,6 +338,23 @@ export async function createDatabaseDump(
     };
 }
 
+function assertRestoreClientUsable(client: PgClientResolution): void {
+    const { clientMajorVersion, serverMajorVersion } = client;
+
+    if (
+        clientMajorVersion === null ||
+        serverMajorVersion === null ||
+        clientMajorVersion <= serverMajorVersion
+    ) {
+        return;
+    }
+
+    logClientInstallHint(serverMajorVersion);
+    throw new Error(
+        `pg_restore ${clientMajorVersion} cannot restore into a PostgreSQL ${serverMajorVersion} server: it sets configuration parameters the older server does not recognize`
+    );
+}
+
 export async function restoreDatabase(
     connection: ConnectionConfig,
     options: RestoreOptions
@@ -376,6 +369,11 @@ export async function restoreDatabase(
 
     logger.info(`Restoring database from '${options.inputFile}'`);
     logger.info(`Target database: ${options.targetDatabase}`);
+
+    // Resolved before the drop/create step so a version mismatch aborts while
+    // the target database is still intact.
+    const pgRestore = await resolvePgClient("pg_restore");
+    assertRestoreClientUsable(pgRestore);
 
     // If we need to drop and recreate the database
     if (options.dropExisting) {
@@ -418,13 +416,21 @@ export async function restoreDatabase(
         logger.info("This may take a while for large databases...");
 
         const result = await executeCommandWithProgress(
-            "pg_restore",
+            pgRestore.command,
             args,
             env,
             true
         );
 
         if (!result.success) {
+            // The custom-format archive version is bumped by major releases, and
+            // pg_restore refuses archives newer than itself — so a dump taken
+            // with a newer pg_dump is unreadable by the version-matched client.
+            if (result.error.includes("unsupported version")) {
+                logger.info(
+                    `This dump was written by a newer pg_dump than PostgreSQL ${pgRestore.serverMajorVersion} can read. Re-create it with 'dbmux dump' against the target's version, or restore into a newer server.`
+                );
+            }
             throw new Error(`pg_restore failed: ${result.error}`);
         }
     } else {
@@ -477,8 +483,14 @@ export async function verifyDumpFile(filePath: string): Promise<boolean> {
             return false; // false means it's not custom format (but still valid)
         }
 
-        // For other formats (.dump, .tar, .gz), try to list contents
-        const result = await executeCommand("pg_restore", ["--list", filePath]);
+        // For other formats (.dump, .tar, .gz), try to list contents.
+        // Verifying with the same client the restore will use, since a client
+        // older than the archive rejects it outright.
+        const pgRestore = await resolvePgClient("pg_restore");
+        const result = await executeCommand(pgRestore.command, [
+            "--list",
+            filePath,
+        ]);
 
         if (result.success) {
             logger.success("Dump file verification passed (custom format)");
