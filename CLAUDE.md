@@ -34,6 +34,15 @@ Turborepo monorepo with Bun workspaces:
 - `bun run lint` — Lint all packages
 - `bun run format` — Format code with Prettier
 
+### Releasing
+
+Versions are derived from changesets, never set by hand.
+
+- `bun changeset` — record a user-visible change; commit the generated file with the PR
+- Merging to `main` opens a "chore: version packages" PR; merging that PR publishes to npm and cuts the GitHub release
+
+`dbmux` is the only published package — every other workspace is `private: true` and is excluded from versioning by `.changeset/config.json`.
+
 ## Architecture
 
 dbmux is a TypeScript CLI built with Bun runtime and a driver-based architecture for multi-database support.
