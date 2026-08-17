@@ -1,7 +1,12 @@
+import { extractMessageFromError } from "@dbmux/utils/general";
 import { confirm, select } from "@inquirer/prompts";
 import { createDriver } from "../../db-drivers/driver-factory.js";
 import { getConnection } from "../../utils/config.js";
-import { connectToDatabase, getDatabases } from "../../utils/database.js";
+import {
+    closeConnection,
+    connectToDatabase,
+    getDatabases,
+} from "../../utils/database.js";
 import { logger } from "../../utils/logger.js";
 import type { ConnectionConfig, DatabaseInfo } from "@dbmux/types/database";
 
@@ -38,88 +43,102 @@ export async function executeDbDeleteCommand(
         );
     }
 
-    await connectToDatabase(connection);
-
-    let selectedDatabase: string;
-    if (options.database) {
-        selectedDatabase = options.database;
-
-        logger.info("Verifying database exists...");
-        const databases: DatabaseInfo[] = await getDatabases();
-        const dbExists = databases.some((db) => db.name === selectedDatabase);
-        if (!dbExists) {
-            throw new DbDeleteError(`Database '${selectedDatabase}' not found`);
-        }
-    } else {
-        logger.info("Fetching available databases...");
-        const databases: DatabaseInfo[] = await getDatabases();
-
-        if (databases.length === 0) {
-            throw new DbDeleteError("No databases found");
-        }
-
-        const systemDbs = ["postgres", "template0", "template1"];
-        const userDatabases = databases.filter(
-            (db) => !systemDbs.includes(db.name)
-        );
-
-        if (userDatabases.length === 0) {
-            throw new DbDeleteError(
-                "No user databases found (only system databases exist)"
-            );
-        }
-
-        selectedDatabase = await select({
-            message: "Select database to delete:",
-            choices: userDatabases.map((db: DatabaseInfo) => ({
-                name: `${db.name} (${db.size || "N/A"})`,
-                value: db.name,
-                description: `Owner: ${db.owner || "N/A"} | Tables: ${db.tables || "N/A"}`,
-            })),
-        });
-    }
-
-    if (!options.force) {
-        logger.raw("");
-        logger.raw(
-            "WARNING: This will permanently delete the database and ALL its data!"
-        );
-        logger.raw(`Database: ${selectedDatabase}`);
-        logger.raw("");
-
-        const shouldProceed = await confirm({
-            message: `Are you absolutely sure you want to DELETE '${selectedDatabase}'?`,
-            default: false,
-        });
-
-        if (!shouldProceed) {
-            logger.info("Delete operation cancelled");
-            return;
-        }
-
-        const doubleConfirm = await confirm({
-            message: `Final confirmation: Delete '${selectedDatabase}'? This cannot be undone.`,
-            default: false,
-        });
-
-        if (!doubleConfirm) {
-            logger.info("Delete operation cancelled");
-            return;
-        }
-    }
-
-    const driver = createDriver(connection.type);
-    await driver.connect(connection);
-
     try {
-        logger.info("Terminating active connections...");
-        await driver.terminateConnections(selectedDatabase);
+        await connectToDatabase(connection);
 
-        logger.info(`Dropping database '${selectedDatabase}'...`);
-        await driver.dropDatabase(selectedDatabase);
+        let selectedDatabase: string;
+        if (options.database) {
+            selectedDatabase = options.database;
 
-        logger.success(`Database '${selectedDatabase}' has been deleted`);
+            logger.info("Verifying database exists...");
+            const databases: DatabaseInfo[] = await getDatabases();
+            const dbExists = databases.some(
+                (db) => db.name === selectedDatabase
+            );
+            if (!dbExists) {
+                throw new DbDeleteError(
+                    `Database '${selectedDatabase}' not found`
+                );
+            }
+        } else {
+            logger.info("Fetching available databases...");
+            const databases: DatabaseInfo[] = await getDatabases();
+
+            if (databases.length === 0) {
+                throw new DbDeleteError("No databases found");
+            }
+
+            const systemDbs = ["postgres", "template0", "template1"];
+            const userDatabases = databases.filter(
+                (db) => !systemDbs.includes(db.name)
+            );
+
+            if (userDatabases.length === 0) {
+                throw new DbDeleteError(
+                    "No user databases found (only system databases exist)"
+                );
+            }
+
+            selectedDatabase = await select({
+                message: "Select database to delete:",
+                choices: userDatabases.map((db: DatabaseInfo) => ({
+                    name: `${db.name} (${db.size || "N/A"})`,
+                    value: db.name,
+                    description: `Owner: ${db.owner || "N/A"} | Tables: ${db.tables || "N/A"}`,
+                })),
+            });
+        }
+
+        if (!options.force) {
+            logger.raw("");
+            logger.raw(
+                "WARNING: This will permanently delete the database and ALL its data!"
+            );
+            logger.raw(`Database: ${selectedDatabase}`);
+            logger.raw("");
+
+            const shouldProceed = await confirm({
+                message: `Are you absolutely sure you want to DELETE '${selectedDatabase}'?`,
+                default: false,
+            });
+
+            if (!shouldProceed) {
+                logger.info("Delete operation cancelled");
+                return;
+            }
+
+            const doubleConfirm = await confirm({
+                message: `Final confirmation: Delete '${selectedDatabase}'? This cannot be undone.`,
+                default: false,
+            });
+
+            if (!doubleConfirm) {
+                logger.info("Delete operation cancelled");
+                return;
+            }
+        }
+
+        const driver = createDriver(connection.type);
+        await driver.connect(connection);
+
+        try {
+            logger.info("Terminating active connections...");
+            await driver.terminateConnections(selectedDatabase);
+
+            logger.info(`Dropping database '${selectedDatabase}'...`);
+            await driver.dropDatabase(selectedDatabase);
+
+            logger.success(`Database '${selectedDatabase}' has been deleted`);
+        } finally {
+            try {
+                await driver.disconnect();
+            } catch (error) {
+                logger.warn(
+                    `Connection cleanup failed, the delete itself completed: ${extractMessageFromError(error, "unknown error")}`
+                );
+            }
+        }
     } finally {
-        await driver.disconnect();
+        await closeConnection();
     }
 }

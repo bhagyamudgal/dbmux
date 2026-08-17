@@ -27,7 +27,8 @@ const { getActiveConnection } = vi.hoisted(() => ({
 const { DUMPS_DIR } = vi.hoisted(() => ({
     DUMPS_DIR: "/mock/.dbmux/dumps",
 }));
-const { connectToDatabase, getDatabases } = vi.hoisted(() => ({
+const { closeConnection, connectToDatabase, getDatabases } = vi.hoisted(() => ({
+    closeConnection: vi.fn(),
     connectToDatabase: vi.fn(),
     getDatabases: vi.fn(),
 }));
@@ -61,6 +62,7 @@ vi.mock("../src/utils/config.js", () => ({
 vi.mock("../src/utils/session.js", () => ({ getActiveConnection }));
 vi.mock("../src/utils/constants.js", () => ({ DUMPS_DIR }));
 vi.mock("../src/utils/database.js", () => ({
+    closeConnection,
     connectToDatabase,
     getDatabases,
 }));
@@ -73,8 +75,12 @@ vi.mock("@inquirer/prompts", () => ({ confirm, input, select }));
 vi.mock("../src/utils/logger.js", () => ({ logger }));
 
 describe("executeRestoreCommand", () => {
+    let originalExitCode: typeof process.exitCode;
+
     beforeEach(() => {
         vi.resetAllMocks();
+        originalExitCode = process.exitCode;
+        process.exitCode = undefined;
         ensureCommandsExist.mockReturnValue(true);
         getConnection.mockReturnValue({ type: "postgresql" });
         listDumpFiles.mockReturnValue([
@@ -102,6 +108,7 @@ describe("executeRestoreCommand", () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+        process.exitCode = originalExitCode;
     });
 
     it("should fail if pg_restore is not found", async () => {
@@ -111,15 +118,12 @@ describe("executeRestoreCommand", () => {
     });
 
     it("should fail if dump file does not exist", async () => {
-        const processExit = vi
-            .spyOn(process, "exit")
-            .mockImplementation((() => {}) as () => never);
         (existsSync as Mock).mockReturnValue(false);
         await executeRestoreCommand({ file: "bad.dump" });
         expect(logger.fail).toHaveBeenCalledWith(
             "Dump file not found: bad.dump"
         );
-        expect(processExit).toHaveBeenCalledWith(1);
+        expect(process.exitCode).toBe(1);
     });
 
     it("should restore to a new database interactively", async () => {
@@ -183,38 +187,29 @@ describe("executeRestoreCommand", () => {
     it("should handle restore failure", async () => {
         const restoreError = new Error("Restore failed");
         restoreDatabase.mockRejectedValue(restoreError);
-        const processExitSpy = vi
-            .spyOn(process, "exit")
-            .mockImplementation((() => {}) as () => never);
 
         await executeRestoreCommand({ file: "test.dump", database: "db1" });
         expect(logger.fail).toHaveBeenCalledWith(
             expect.stringContaining("Restore failed: Restore failed")
         );
-        expect(processExitSpy).toHaveBeenCalledWith(1);
+        expect(process.exitCode).toBe(1);
     });
 
     it("should fail if no dump files are found", async () => {
-        const processExit = vi
-            .spyOn(process, "exit")
-            .mockImplementation((() => {}) as () => never);
         listDumpFiles.mockReturnValue([]);
         await executeRestoreCommand({});
         expect(logger.fail).toHaveBeenCalledWith("No dump files found");
-        expect(processExit).toHaveBeenCalledWith(1);
+        expect(process.exitCode).toBe(1);
     });
 
     it("should fail if dump file verification fails", async () => {
-        const processExit = vi
-            .spyOn(process, "exit")
-            .mockImplementation((() => {}) as () => never);
         const verifyError = new Error("Bad dump file");
         verifyDumpFile.mockRejectedValue(verifyError);
         await executeRestoreCommand({ file: "test.dump" });
         expect(logger.fail).toHaveBeenCalledWith(
             "Dump file verification failed."
         );
-        expect(processExit).toHaveBeenCalledWith(1);
+        expect(process.exitCode).toBe(1);
     });
 
     it("should cancel if user rejects final confirmation", async () => {

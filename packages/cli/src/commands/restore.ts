@@ -11,7 +11,11 @@ import {
     getSuccessfulDumps,
     loadConfig,
 } from "../utils/config.js";
-import { connectToDatabase, getDatabases } from "../utils/database.js";
+import {
+    closeConnection,
+    connectToDatabase,
+    getDatabases,
+} from "../utils/database.js";
 import {
     listDumpFiles,
     restoreDatabase,
@@ -70,7 +74,8 @@ export async function executeRestoreCommand(
             if (!resolved) {
                 logger.fail(`Dump file not found: ${options.file}`);
                 logger.info(`Checked: ${DUMPS_DIR} and ${process.cwd()}`);
-                process.exit(1);
+                process.exitCode = 1;
+                return;
             }
             options.file = resolved;
         }
@@ -83,14 +88,16 @@ export async function executeRestoreCommand(
             logger.fail(
                 "No database connection found. Run 'dbmux connect' first."
             );
-            process.exit(1);
+            process.exitCode = 1;
+            return;
         }
 
         if (connection.type !== "postgresql") {
             logger.fail(
                 "Restore command is currently only supported for PostgreSQL databases."
             );
-            process.exit(1);
+            process.exitCode = 1;
+            return;
         }
 
         // Connect to database for operations
@@ -108,7 +115,8 @@ export async function executeRestoreCommand(
                 logger.info(
                     "Run 'dbmux dump' to create a database backup first"
                 );
-                process.exit(1);
+                process.exitCode = 1;
+                return;
             }
 
             const selectedId = await select({
@@ -125,14 +133,16 @@ export async function executeRestoreCommand(
             );
             if (!selectedHistoryEntry) {
                 logger.fail("Selected history entry not found");
-                process.exit(1);
+                process.exitCode = 1;
+                return;
             }
 
             if (!fs.existsSync(selectedHistoryEntry.filePath)) {
                 logger.fail(
                     `Dump file no longer exists: ${selectedHistoryEntry.filePath}`
                 );
-                process.exit(1);
+                process.exitCode = 1;
+                return;
             }
 
             dumpFile = selectedHistoryEntry.filePath;
@@ -150,7 +160,8 @@ export async function executeRestoreCommand(
                 logger.info(
                     "Use --file <path> to specify a file from another location"
                 );
-                process.exit(1);
+                process.exitCode = 1;
+                return;
             }
 
             dumpFile = await select({
@@ -170,7 +181,8 @@ export async function executeRestoreCommand(
             isCustomFormat = await verifyDumpFile(dumpFile);
         } catch {
             logger.fail("Dump file verification failed.");
-            process.exit(1);
+            process.exitCode = 1;
+            return;
         }
 
         // Select restore target
@@ -231,7 +243,8 @@ export async function executeRestoreCommand(
 
                 if (databases.length === 0) {
                     logger.fail("No databases found");
-                    process.exit(1);
+                    process.exitCode = 1;
+                    return;
                 }
 
                 targetDatabase = await select({
@@ -346,6 +359,9 @@ export async function executeRestoreCommand(
         logger.fail(
             `Restore failed: ${extractMessageFromError(error, "Unknown error")}`
         );
-        process.exit(1);
+        // see dump.ts: process.exit() would skip the finally below.
+        process.exitCode = 1;
+    } finally {
+        await closeConnection();
     }
 }

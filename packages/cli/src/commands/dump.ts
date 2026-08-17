@@ -2,7 +2,11 @@ import type { DatabaseInfo } from "@dbmux/types/database";
 import { confirm, input, select } from "@inquirer/prompts";
 import { ensureCommandsExist } from "../utils/command-check.js";
 import { addDumpHistory, getConnection, loadConfig } from "../utils/config.js";
-import { connectToDatabase, getDatabases } from "../utils/database.js";
+import {
+    closeConnection,
+    connectToDatabase,
+    getDatabases,
+} from "../utils/database.js";
 import {
     createDatabaseDump,
     generateDumpFilename,
@@ -158,6 +162,9 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
         }
     } catch (error) {
         logger.fail(`Dump failed: ${error}`);
-        process.exit(1);
+        // process.exit() would skip the finally below and strand the pool.
+        process.exitCode = 1;
+    } finally {
+        await closeConnection();
     }
 }
