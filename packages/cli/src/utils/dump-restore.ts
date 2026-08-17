@@ -170,6 +170,17 @@ export async function executeCommandWithProgress(
                 error: stderr,
             });
         });
+
+        // An unhandled "error" event is rethrown as an uncaught exception, and
+        // the "close" that follows a spawn failure carries no stderr — so the
+        // ENOENT only reaches the caller through this handler.
+        childProcess.on("error", (error: Error) => {
+            resolve({
+                success: false,
+                output: stdout,
+                error: error.message,
+            });
+        });
     });
 }
 
