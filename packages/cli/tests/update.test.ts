@@ -274,6 +274,22 @@ describe("executeUpdateCommand", () => {
         expect(process.exitCode).toBe(1);
     });
 
+    it("exits non-zero when the registry returns an unparseable version", async () => {
+        detectInstallMethod.mockReturnValue({
+            kind: "binary",
+            executablePath: "/usr/local/bin/dbmux",
+        });
+        fetchLatestVersion.mockResolvedValue("not-a-version");
+
+        await executeUpdateCommand();
+
+        expect(logger.fail).toHaveBeenCalledWith(
+            "Could not parse version: not-a-version"
+        );
+        expect(replaceBinary).not.toHaveBeenCalled();
+        expect(process.exitCode).toBe(1);
+    });
+
     it("exits non-zero when the version check cannot reach the registry", async () => {
         detectInstallMethod.mockReturnValue({
             kind: "binary",

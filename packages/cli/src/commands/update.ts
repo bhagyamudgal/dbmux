@@ -80,11 +80,13 @@ export async function executeUpdateCommand(
 
     const spinner = createSpinner({ text: "Checking for updates..." });
     let latestVersion: string;
+    let hasNewerVersion: boolean;
 
     try {
         latestVersion = await fetchLatestVersion(
             installMethod.kind === "binary" ? "github" : "npm"
         );
+        hasNewerVersion = isNewerVersion(latestVersion, PACKAGE_VERSION);
         spinner.stop();
     } catch (error) {
         spinner.fail("Could not check for updates");
@@ -93,7 +95,7 @@ export async function executeUpdateCommand(
         return;
     }
 
-    if (!isNewerVersion(latestVersion, PACKAGE_VERSION)) {
+    if (!hasNewerVersion) {
         logger.success(`Already on the latest version (${PACKAGE_VERSION})`);
         return;
     }

@@ -98,6 +98,24 @@ describe("replaceBinary", () => {
         expect(await readdir(installDirectory)).toEqual(["dbmux"]);
     });
 
+    it("rejects a reported version that merely contains the expected one", async () => {
+        stubReleaseDownload(sha256(NEW_CONTENT));
+        executeCommand.mockResolvedValue({
+            success: true,
+            output: `${NEW_VERSION}0\n`,
+            error: "",
+        });
+
+        await expect(
+            replaceBinary(executablePath, NEW_VERSION)
+        ).rejects.toThrow(
+            `Installed binary did not report version ${NEW_VERSION}`
+        );
+
+        expect(await readFile(executablePath, "utf-8")).toBe(ORIGINAL_CONTENT);
+        expect(await readdir(installDirectory)).toEqual(["dbmux"]);
+    });
+
     it("aborts before touching the installed binary when the checksum does not match", async () => {
         stubReleaseDownload(sha256("something-else-entirely"));
 

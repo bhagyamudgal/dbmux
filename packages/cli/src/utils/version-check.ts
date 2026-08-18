@@ -3,6 +3,11 @@ import { GITHUB_REPOSITORY, PACKAGE_NAME } from "./package-info.js";
 const NPM_REGISTRY_URL = `https://registry.npmjs.org/${PACKAGE_NAME}/latest`;
 const GITHUB_LATEST_RELEASE_URL = `https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest`;
 
+// A registry that accepts the connection but never answers would otherwise hang the
+// update check forever. Only these small metadata reads are bounded; the release
+// download is not, because a slow link legitimately takes minutes for a 59 MB binary.
+const REQUEST_TIMEOUT_MS = 10_000;
+
 type VersionSource = "npm" | "github";
 
 function parseVersion(version: string): [number, number, number] {
@@ -58,7 +63,9 @@ export async function fetchLatestVersion(
     source: VersionSource
 ): Promise<string> {
     if (source === "npm") {
-        const response = await fetch(NPM_REGISTRY_URL);
+        const response = await fetch(NPM_REGISTRY_URL, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
         if (!response.ok) {
             throw new Error(
                 `npm registry request failed with status ${response.status}`
@@ -73,6 +80,7 @@ export async function fetchLatestVersion(
 
     const response = await fetch(GITHUB_LATEST_RELEASE_URL, {
         headers: { Accept: "application/vnd.github+json" },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     if (!response.ok) {
         throw new Error(

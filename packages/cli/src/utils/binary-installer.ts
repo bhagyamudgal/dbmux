@@ -10,6 +10,7 @@ import {
 } from "fs/promises";
 import { tmpdir } from "os";
 import { dirname, join } from "path";
+import { logger } from "./logger.js";
 import { GITHUB_REPOSITORY } from "./package-info.js";
 import { executeCommand, executeCommandInteractive } from "./process-runner.js";
 
@@ -120,7 +121,7 @@ async function verifyInstalledVersion(
     const { success, output } = await executeCommand(executablePath, [
         "--version",
     ]);
-    if (!success || !output.includes(version)) {
+    if (!success || output.trim() !== version) {
         throw new Error(
             `Installed binary did not report version ${version}; rolling back`
         );
@@ -147,7 +148,13 @@ async function installDownloadedBinary(
         throw error;
     }
 
-    await mover.remove(backupPath);
+    // Windows lets us rename a running image but not delete one, so the backup can
+    // outlive a successful update. The new binary is already in place either way.
+    try {
+        await mover.remove(backupPath);
+    } catch {
+        logger.warn(`Previous binary left behind at ${backupPath}`);
+    }
 }
 
 export async function replaceBinary(

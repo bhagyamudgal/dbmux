@@ -14,7 +14,7 @@ A flexible, modern database management CLI tool built with TypeScript and Bun. S
 - **Persistent Config**: Connections saved to `~/.dbmux/config.json`
 - **Database Backup & Restore**: Production-ready pg_dump and pg_restore with history tracking
 - **Database Operations**: Delete databases directly from CLI with safety confirmations
-- **Self-Updating**: `dbmux update` upgrades binary and npm installs, with checksum verification
+- **Self-Updating**: `dbmux update` upgrades standalone binary and global npm/bun/pnpm installs, with checksum verification
 - **Modern Architecture**: Turborepo monorepo, ESM modules, strict TypeScript
 
 ## Monorepo Structure
