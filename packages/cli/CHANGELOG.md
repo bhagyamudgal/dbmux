@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.3.1
+
+### Patch Changes
+
+- bec9bdf: Fix three PostgreSQL connection-lifecycle faults that could crash or hang the CLI.
+
+    Deleting the database dbmux is currently connected to could die with an uncaught `Unhandled 'error' event` instead of reporting success, because dropping it terminates the backends of the pools dbmux itself holds and the pool had no error listener. `dbmux connect` could hang when the connection check passed but the validation query that followed failed: the pooled client was never released, and its live socket kept Node's event loop running. A connection that failed partway through opening was never closed at all, leaving its pool behind.
+
+- 72386d0: Fix `restore run` dying with an uncaught `ENOENT` when `pg_restore` or `psql` cannot be spawned. The runner never listened for the child process `error` event, and an unhandled `error` is rethrown as an uncaught exception, so the CLI died before the failure could be reported or recorded in history. The spawn failure now travels the normal error path and names the binary it could not run.
+- 80529a4: Fix `dump create`, `restore run` and `db delete` hanging for roughly 30 seconds after printing their final line. Each opened the shared connection pool without closing it, and pg-pool keeps the idle socket and its idle timer referenced, so Node could not exit until the pool timed out. All three now close the connection on every path, including cancellation, early exits and failure.
+
+    `dump create` and `restore run` now exit non-zero whenever they report a failure. Cases such as a missing `pg_dump`, an unknown database or no saved connection previously printed an error and exited 0, which scripts could not detect. Cancelling at a prompt still exits 0, because that is not a failure.
+
+    Commands that fail now set an exit status and return rather than terminating the process outright, so cleanup runs and buffered output is not truncated. A connection that cannot be closed is reported as a warning that says the command itself completed, so a finished dump or delete is no longer reported as a failure.
+
 ## 2.3.0
 
 ### Minor Changes
