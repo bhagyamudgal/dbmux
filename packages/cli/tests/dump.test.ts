@@ -60,8 +60,12 @@ describe("executeDumpCommand", () => {
     const mockConnection = { type: "postgresql" };
     const mockDatabases = [{ name: "db1" }, { name: "db2" }];
 
+    let originalExitCode: typeof process.exitCode;
+
     beforeEach(() => {
         vi.resetAllMocks();
+        originalExitCode = process.exitCode;
+        process.exitCode = undefined;
         ensureCommandsExist.mockReturnValue(true);
         getConnection.mockReturnValue(mockConnection);
         getDatabases.mockResolvedValue(mockDatabases);
@@ -91,6 +95,7 @@ describe("executeDumpCommand", () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+        process.exitCode = originalExitCode;
     });
 
     it("should fail if pg_dump is not found", async () => {
@@ -149,15 +154,11 @@ describe("executeDumpCommand", () => {
     it("should handle errors from createDatabaseDump", async () => {
         const dumpError = new Error("Disk full");
         createDatabaseDump.mockRejectedValue(dumpError);
-        const originalExitCode = process.exitCode;
-        process.exitCode = undefined;
 
         await executeDumpCommand({ database: "db1" });
 
         expect(logger.fail).toHaveBeenCalledWith(`Dump failed: ${dumpError}`);
         expect(process.exitCode).toBe(1);
-
-        process.exitCode = originalExitCode;
     });
 
     it("should fail if no databases are found", async () => {

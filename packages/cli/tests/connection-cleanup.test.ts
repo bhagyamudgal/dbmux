@@ -296,6 +296,20 @@ describe("connection cleanup", () => {
             );
             expectEverythingClosed();
         });
+
+        it("exits non-zero on a reported failure that is not a throw", async () => {
+            await executeDumpCommand({ database: "no_such_db" });
+
+            expect(process.exitCode).toBe(1);
+        });
+
+        it("exits zero when the user cancels, which is not a failure", async () => {
+            confirm.mockResolvedValue(false);
+
+            await executeDumpCommand({ database: "app_db" });
+
+            expect(process.exitCode).toBeUndefined();
+        });
     });
 
     describe("restore run", () => {
@@ -366,6 +380,31 @@ describe("connection cleanup", () => {
                 "Delete operation cancelled"
             );
             expectEverythingClosed();
+        });
+
+        it("closes the admin driver when its connect fails", async () => {
+            let driverIndex = 0;
+            createDriver.mockImplementation(() => {
+                const driver = buildDriver();
+                driverIndex += 1;
+                if (driverIndex === 1) {
+                    return driver;
+                }
+                return {
+                    ...driver,
+                    connect: async () => {
+                        await driver.connect();
+                        throw new Error("SELECT 1 failed");
+                    },
+                };
+            });
+
+            await expect(
+                executeDbDeleteCommand({ database: "app_db", force: true })
+            ).rejects.toThrow("SELECT 1 failed");
+
+            expect(driverCount()).toBe(2);
+            expect(openDrivers()).toEqual([]);
         });
 
         it("still reports the delete when the close fails", async () => {

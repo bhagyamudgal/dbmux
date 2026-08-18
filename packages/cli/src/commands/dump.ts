@@ -26,6 +26,7 @@ export type DumpOptions = {
 export async function executeDumpCommand(options: DumpOptions): Promise<void> {
     try {
         if (!ensureCommandsExist(["pg_dump"])) {
+            process.exitCode = 1;
             return;
         }
 
@@ -39,6 +40,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             logger.fail(
                 "No database connection found. Run 'dbmux connect' first."
             );
+            process.exitCode = 1;
             return;
         }
 
@@ -46,6 +48,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             logger.fail(
                 "Dump command is currently only supported for PostgreSQL databases."
             );
+            process.exitCode = 1;
             return;
         }
 
@@ -59,6 +62,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
 
         if (databases.length === 0) {
             logger.fail("No databases found");
+            process.exitCode = 1;
             return;
         }
 
@@ -71,6 +75,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             );
             if (!dbExists) {
                 logger.fail(`Database '${selectedDatabase}' not found`);
+                process.exitCode = 1;
                 return;
             }
         } else {

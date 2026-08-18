@@ -63,6 +63,7 @@ export async function executeRestoreCommand(
 ): Promise<void> {
     try {
         if (!ensureCommandsExist(["pg_restore", "psql"])) {
+            process.exitCode = 1;
             return;
         }
 

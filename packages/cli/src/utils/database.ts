@@ -22,7 +22,11 @@ export async function connectToDatabase(config: ConnectionConfig) {
     } catch (error) {
         // A driver that fails partway through connect() is never stored, so
         // closeConnection() cannot reach the pool it already opened.
-        await driver.disconnect().catch(() => {});
+        await driver.disconnect().catch((cleanupError) => {
+            logger.warn(
+                `Connection cleanup failed while connecting: ${extractMessageFromError(cleanupError, "unknown error")}`
+            );
+        });
         throw error;
     }
     currentDriver = driver;

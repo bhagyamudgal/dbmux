@@ -119,7 +119,14 @@ export async function executeDbDeleteCommand(
         }
 
         const driver = createDriver(connection.type);
-        await driver.connect(connection);
+        try {
+            await driver.connect(connection);
+        } catch (error) {
+            // see connectToDatabase: a driver that fails partway through
+            // connect() still holds the pool it opened.
+            await driver.disconnect().catch(() => {});
+            throw error;
+        }
 
         try {
             logger.info("Terminating active connections...");
