@@ -6,6 +6,7 @@ import type {
     QueryResult,
     TableDetail,
 } from "@dbmux/types/database";
+import { logger } from "../utils/logger.js";
 import type { DatabaseDriver } from "./database-driver.js";
 
 export class PostgresDriver implements DatabaseDriver {
@@ -30,9 +31,22 @@ export class PostgresDriver implements DatabaseDriver {
             connectionTimeoutMillis: 10000,
         });
 
+        // pg re-emits an idle client's error on the pool, and an unlistened
+        // "error" event is an uncaught exception. `db delete` terminates the
+        // backends of its own pools, so this fires on a delete that succeeded.
+        this.pool.on("error", (error) => {
+            logger.warn(`Database connection dropped: ${error.message}`);
+        });
+
         const client = await this.pool.connect();
-        await client.query("SELECT 1");
-        client.release();
+        try {
+            await client.query("SELECT 1");
+        } finally {
+            // pool.end() waits for every checked-out client to come back, so a
+            // client left out here hangs the CLI indefinitely rather than for
+            // the 30s an idle client costs.
+            client.release();
+        }
     }
 
     private isValidUnquotedName(name: string): boolean {
@@ -101,8 +115,15 @@ export class PostgresDriver implements DatabaseDriver {
     }
 
     async disconnect(): Promise<void> {
-        if (this.pool) {
+        if (!this.pool) {
+            return;
+        }
+
+        try {
             await this.pool.end();
+        } finally {
+            // Retaining a half-ended pool makes the next end() reject with
+            // "Called end on pool more than once".
             this.pool = null;
         }
     }

@@ -68,6 +68,30 @@ function stubSpawn(exitCode: number, stderrOutput = ""): void {
     });
 }
 
+// Node 24 emits "error" then "close" with code -2 and no stderr for a failed
+// spawn, so a runner that reads only "close" reports an empty reason. Emission
+// is sequenced here rather than at registration, because the runner subscribes
+// to "close" first and the order is what decides which reason the caller gets.
+function stubSpawnFailure(errorMessage: string): void {
+    vi.mocked(spawn).mockImplementation(() => {
+        const handlers = new Map<string, (payload: never) => void>();
+
+        queueMicrotask(() => {
+            handlers.get("error")?.(new Error(errorMessage) as never);
+            handlers.get("close")?.(-2 as never);
+        });
+
+        const childProcess = {
+            stdout: { on: vi.fn() },
+            stderr: { on: vi.fn() },
+            on: vi.fn((event: string, handler: (payload: never) => void) => {
+                handlers.set(event, handler);
+            }),
+        };
+        return childProcess as unknown as ReturnType<typeof spawn>;
+    });
+}
+
 describe("restoreDatabase client version guard", () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -141,6 +165,21 @@ describe("restoreDatabase client version guard", () => {
 
         expect(logger.info).toHaveBeenCalledWith(
             expect.stringContaining("newer pg_dump")
+        );
+    });
+
+    it("reports why pg_restore could not be spawned", async () => {
+        resolvePgClient.mockResolvedValue({
+            command: "/missing/bin/pg_restore",
+            clientMajorVersion: 16,
+            serverMajorVersion: 16,
+        });
+        stubSpawnFailure("spawn /missing/bin/pg_restore ENOENT");
+
+        await expect(
+            restoreDatabase(CONNECTION, RESTORE_OPTIONS)
+        ).rejects.toThrow(
+            "pg_restore failed: spawn /missing/bin/pg_restore ENOENT"
         );
     });
 });

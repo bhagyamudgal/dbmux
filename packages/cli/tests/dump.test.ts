@@ -12,7 +12,8 @@ const { getConnection, addDumpHistory, loadConfig } = vi.hoisted(() => ({
 const { getActiveConnection } = vi.hoisted(() => ({
     getActiveConnection: vi.fn(),
 }));
-const { connectToDatabase, getDatabases } = vi.hoisted(() => ({
+const { closeConnection, connectToDatabase, getDatabases } = vi.hoisted(() => ({
+    closeConnection: vi.fn(),
     connectToDatabase: vi.fn(),
     getDatabases: vi.fn(),
 }));
@@ -43,6 +44,7 @@ vi.mock("../src/utils/config.js", () => ({
 }));
 vi.mock("../src/utils/session.js", () => ({ getActiveConnection }));
 vi.mock("../src/utils/database.js", () => ({
+    closeConnection,
     connectToDatabase,
     getDatabases,
 }));
@@ -58,8 +60,12 @@ describe("executeDumpCommand", () => {
     const mockConnection = { type: "postgresql" };
     const mockDatabases = [{ name: "db1" }, { name: "db2" }];
 
+    let originalExitCode: typeof process.exitCode;
+
     beforeEach(() => {
         vi.resetAllMocks();
+        originalExitCode = process.exitCode;
+        process.exitCode = undefined;
         ensureCommandsExist.mockReturnValue(true);
         getConnection.mockReturnValue(mockConnection);
         getDatabases.mockResolvedValue(mockDatabases);
@@ -89,6 +95,7 @@ describe("executeDumpCommand", () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+        process.exitCode = originalExitCode;
     });
 
     it("should fail if pg_dump is not found", async () => {
@@ -147,14 +154,11 @@ describe("executeDumpCommand", () => {
     it("should handle errors from createDatabaseDump", async () => {
         const dumpError = new Error("Disk full");
         createDatabaseDump.mockRejectedValue(dumpError);
-        const processExit = vi
-            .spyOn(process, "exit")
-            .mockImplementation((() => {}) as () => never);
 
         await executeDumpCommand({ database: "db1" });
 
         expect(logger.fail).toHaveBeenCalledWith(`Dump failed: ${dumpError}`);
-        expect(processExit).toHaveBeenCalledWith(1);
+        expect(process.exitCode).toBe(1);
     });
 
     it("should fail if no databases are found", async () => {

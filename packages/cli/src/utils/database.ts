@@ -4,6 +4,7 @@ import type {
     QueryResult,
     TableDetail,
 } from "@dbmux/types/database";
+import { extractMessageFromError } from "@dbmux/utils/general";
 import type { DatabaseDriver } from "../db-drivers/database-driver.js";
 import { createDriver } from "../db-drivers/driver-factory.js";
 import { logger } from "./logger.js";
@@ -16,7 +17,18 @@ export async function connectToDatabase(config: ConnectionConfig) {
         await currentDriver.disconnect();
     }
     const driver = createDriver(config.type);
-    await driver.connect(config);
+    try {
+        await driver.connect(config);
+    } catch (error) {
+        // A driver that fails partway through connect() is never stored, so
+        // closeConnection() cannot reach the pool it already opened.
+        await driver.disconnect().catch((cleanupError) => {
+            logger.warn(
+                `Connection cleanup failed while connecting: ${extractMessageFromError(cleanupError, "unknown error")}`
+            );
+        });
+        throw error;
+    }
     currentDriver = driver;
     currentConfig = config;
     logger.success(
@@ -25,11 +37,22 @@ export async function connectToDatabase(config: ConnectionConfig) {
 }
 
 export async function closeConnection() {
-    if (currentDriver) {
+    if (!currentDriver) {
+        return;
+    }
+
+    try {
         await currentDriver.disconnect();
+        logger.info("Database connection closed.");
+    } catch (error) {
+        // Every caller closes from a finally, where a throw would replace the
+        // command's real outcome with a cleanup failure.
+        logger.warn(
+            `Connection cleanup failed, the command itself completed: ${extractMessageFromError(error, "unknown error")}`
+        );
+    } finally {
         currentDriver = null;
         currentConfig = null;
-        logger.info("Database connection closed.");
     }
 }
 

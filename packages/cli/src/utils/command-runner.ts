@@ -28,7 +28,8 @@ export async function withDatabaseConnection(
         } else {
             logger.fail("An unknown error occurred.");
         }
-        process.exit(1);
+        // process.exit() would skip the finally below and strand the pool.
+        process.exitCode = 1;
     } finally {
         await closeConnection();
     }

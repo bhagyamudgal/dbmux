@@ -2,7 +2,11 @@ import type { DatabaseInfo } from "@dbmux/types/database";
 import { confirm, input, select } from "@inquirer/prompts";
 import { ensureCommandsExist } from "../utils/command-check.js";
 import { addDumpHistory, getConnection, loadConfig } from "../utils/config.js";
-import { connectToDatabase, getDatabases } from "../utils/database.js";
+import {
+    closeConnection,
+    connectToDatabase,
+    getDatabases,
+} from "../utils/database.js";
 import {
     createDatabaseDump,
     generateDumpFilename,
@@ -22,6 +26,7 @@ export type DumpOptions = {
 export async function executeDumpCommand(options: DumpOptions): Promise<void> {
     try {
         if (!ensureCommandsExist(["pg_dump"])) {
+            process.exitCode = 1;
             return;
         }
 
@@ -35,6 +40,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             logger.fail(
                 "No database connection found. Run 'dbmux connect' first."
             );
+            process.exitCode = 1;
             return;
         }
 
@@ -42,6 +48,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             logger.fail(
                 "Dump command is currently only supported for PostgreSQL databases."
             );
+            process.exitCode = 1;
             return;
         }
 
@@ -55,6 +62,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
 
         if (databases.length === 0) {
             logger.fail("No databases found");
+            process.exitCode = 1;
             return;
         }
 
@@ -67,6 +75,7 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             );
             if (!dbExists) {
                 logger.fail(`Database '${selectedDatabase}' not found`);
+                process.exitCode = 1;
                 return;
             }
         } else {
@@ -158,6 +167,9 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
         }
     } catch (error) {
         logger.fail(`Dump failed: ${error}`);
-        process.exit(1);
+        // process.exit() would skip the finally below and strand the pool.
+        process.exitCode = 1;
+    } finally {
+        await closeConnection();
     }
 }
