@@ -14,6 +14,7 @@ A flexible, modern database management CLI tool built with TypeScript and Bun. S
 - **Persistent Config**: Connections saved to `~/.dbmux/config.json`
 - **Database Backup & Restore**: Production-ready pg_dump and pg_restore with history tracking
 - **Database Operations**: Delete databases directly from CLI with safety confirmations
+- **Self-Updating**: `dbmux update` upgrades standalone binary and global npm/bun/pnpm installs, with checksum verification
 - **Modern Architecture**: Turborepo monorepo, ESM modules, strict TypeScript
 
 ## Monorepo Structure
@@ -472,6 +473,29 @@ dbmux disconnect
 ```
 
 Clear the active connection session, reverting to the default connection.
+
+### `update` - Update dbmux
+
+```bash
+# Update to the latest release
+dbmux update
+
+# Report whether an update is available without installing it
+dbmux update --check
+```
+
+Detects how dbmux was installed and updates it accordingly:
+
+| Install method                    | What `update` does                                                                                         |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Standalone binary (`install.sh`)  | Downloads the release asset, verifies its SHA256 against `checksums.txt`, and replaces the binary in place |
+| Global package (npm / bun / pnpm) | Re-runs the matching global install command                                                                |
+| Source checkout                   | Nothing — update with `git` instead                                                                        |
+
+Replacing a standalone binary keeps the previous one as `dbmux.old` until the new
+binary reports the expected version, then removes it. If verification fails, the
+previous binary is restored. Installing into a directory you do not own (such as
+`/usr/local/bin`) prompts for `sudo`.
 
 ## Configuration
 

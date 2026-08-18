@@ -39,3 +39,25 @@ export async function executeCommand(
         });
     });
 }
+
+// Inherits stdio so `sudo` can reach the terminal for its password prompt; the piped
+// variant above would leave the user staring at a hung process.
+export async function executeCommandInteractive(
+    command: string,
+    args: string[]
+): Promise<{ success: boolean; error: string }> {
+    return new Promise((resolve) => {
+        const childProcess = spawn(command, args, { stdio: "inherit" });
+
+        childProcess.on("close", (code: number | null) => {
+            resolve({
+                success: code === 0,
+                error: code === 0 ? "" : `${command} exited with code ${code}`,
+            });
+        });
+
+        childProcess.on("error", (error: Error) => {
+            resolve({ success: false, error: error.message });
+        });
+    });
+}

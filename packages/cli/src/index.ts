@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
 import { boolean, command, number, run, string } from "@drizzle-team/brocli";
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { logger } from "./utils/logger.js";
+import {
+    PACKAGE_DESCRIPTION,
+    PACKAGE_NAME,
+    PACKAGE_VERSION,
+} from "./utils/package-info.js";
 
 // Import commands
 import { executeConfigCommand } from "./commands/config.js";
@@ -19,31 +22,7 @@ import { executeListCommand } from "./commands/list.js";
 import { executeQueryCommand } from "./commands/query.js";
 import { executeRestoreCommand } from "./commands/restore.js";
 import { executeStatusCommand } from "./commands/status.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-type PackageJson = {
-    name: string;
-    version: string;
-    description: string;
-};
-
-function getPackageInfo(): PackageJson {
-    try {
-        const packagePath = join(__dirname, "..", "package.json");
-        const packageContent = readFileSync(packagePath, "utf-8");
-        return JSON.parse(packageContent) as PackageJson;
-    } catch (_error) {
-        // Fallback for compiled binaries where file system paths don't work
-        return {
-            name: "dbmux",
-            version: "2.2.0",
-            description:
-                "A flexible database management CLI tool with persistent configuration",
-        };
-    }
-}
+import { executeUpdateCommand } from "./commands/update.js";
 
 // Define commands
 const connectCommand = command({
@@ -317,8 +296,16 @@ const dbCommand = command({
     ],
 });
 
+const updateCommand = command({
+    name: "update",
+    desc: "Update dbmux to the latest version",
+    options: {
+        check: boolean().alias("c"),
+    },
+    handler: (options) => executeUpdateCommand({ check: options.check }),
+});
+
 async function main(): Promise<void> {
-    const packageInfo = getPackageInfo();
     const commands = [
         connectCommand,
         listCommand,
@@ -330,11 +317,12 @@ async function main(): Promise<void> {
         disconnectCommand,
         historyCommand,
         dbCommand,
+        updateCommand,
     ];
     await run(commands, {
-        name: packageInfo.name,
-        description: packageInfo.description,
-        version: packageInfo.version,
+        name: PACKAGE_NAME,
+        description: PACKAGE_DESCRIPTION,
+        version: PACKAGE_VERSION,
     });
 }
 
