@@ -1,0 +1,116 @@
+export const metadata = {
+    title: "restore",
+    description: "Restore PostgreSQL dumps and review restore history.",
+};
+
+# restore
+
+Restore dumps back into PostgreSQL databases. Restoring requires
+`pg_restore` and `psql` on your PATH. dbmux verifies the dump file format
+first, then routes the work: custom format dumps go through pg_restore,
+plain format dumps go through psql.
+
+## Usage
+
+```bash
+dbmux restore <subcommand> [options]
+```
+
+Two subcommands exist: `run` and `history`.
+
+## restore run
+
+```bash
+dbmux restore run [options]
+```
+
+| Option          | Alias | Type    | Description                               |
+| --------------- | ----- | ------- | ----------------------------------------- |
+| `--file`        | `-f`  | string  | Dump file to restore                      |
+| `--database`    | `-d`  | string  | Target database                           |
+| `--connection`  | `-n`  | string  | Named saved connection to use             |
+| `--create`      | `-c`  | boolean | Create the target database first          |
+| `--drop`        |       | boolean | Drop the target database before restoring |
+| `--verbose`     |       | boolean | Show restore tool output                  |
+| `--fromHistory` | `-H`  | boolean | Pick the dump from recent history         |
+
+### Choosing a file
+
+dbmux resolves the dump file in this order:
+
+1. `--fromHistory` opens a picker over the last 20 successful dumps.
+2. `-f` accepts absolute paths, paths relative to `~/.dbmux/dumps/`, or
+   paths relative to the current directory.
+3. With neither, dbmux shows a picker over `~/.dbmux/dumps/`.
+
+### Choosing a target
+
+With `-d` but neither `--create` nor `--drop`, dbmux asks whether to drop
+and recreate the database or restore into what is already there.
+
+Without `-d`, dbmux offers two paths: restore into an existing database you
+pick from a list, which needs an explicit danger confirmation, or create a
+brand new one. New database names must match `[a-zA-Z][a-zA-Z0-9_]*`.
+
+Nothing executes until you confirm the final prompt.
+
+### Examples
+
+Run fully interactive:
+
+```bash
+dbmux restore run
+```
+
+Restore a named file into a known database:
+
+```bash
+dbmux restore run -f backup.dump -d mydb
+```
+
+Create the target database first:
+
+```bash
+dbmux restore run -f backup.dump -d mydb_new --create
+```
+
+Drop and recreate the target:
+
+```bash
+dbmux restore run -f backup.dump -d mydb --drop
+```
+
+Pick from your recent successful dumps:
+
+```bash
+dbmux restore run --fromHistory
+```
+
+Restore a file from elsewhere through a named connection:
+
+```bash
+dbmux restore run -f ~/Downloads/prod.dump -n staging -d app --create --verbose
+```
+
+## restore history
+
+```bash
+dbmux restore history [options]
+```
+
+| Option     | Alias | Type              | Description     |
+| ---------- | ----- | ----------------- | --------------- |
+| `--limit`  | `-l`  | number            | Entries to show |
+| `--format` | `-f`  | `table` \| `json` | Output format   |
+
+### Example
+
+```bash
+dbmux restore history -l 5
+```
+
+## Related commands
+
+- [dump](/docs/dump) creates the files this command consumes.
+- [history](/docs/history) lists records across both operations.
+- [db](/docs/db) drops databases you no longer need.

@@ -1,0 +1,115 @@
+export const metadata = {
+    title: "Configuration",
+    description:
+        "Where dbmux stores connections, session state, settings, and dump files.",
+};
+
+# Configuration
+
+dbmux keeps everything under `~/.dbmux/`. Saved connections and settings
+live in `config.json`. The active session lives in `session.json`. Dump
+files land in the `dumps/` folder.
+
+## config.json
+
+`~/.dbmux/config.json` holds a record of saved connections keyed by name,
+an optional default connection, settings, and the dump history array:
+
+```json
+{
+    "connections": {
+        "production": {
+            "type": "postgresql",
+            "host": "prod.example.com",
+            "port": 5432,
+            "user": "app",
+            "password": "secret",
+            "database": "myapp",
+            "ssl": true,
+            "lastConnectedAt": "2026-08-20T09:14:03.000Z"
+        },
+        "local": {
+            "type": "postgresql",
+            "host": "localhost",
+            "port": 5432,
+            "user": "postgres",
+            "password": "",
+            "database": "dev",
+            "ssl": false,
+            "lastConnectedAt": "2026-08-22T18:02:44.000Z"
+        }
+    },
+    "defaultConnection": "production",
+    "settings": {
+        "logLevel": "info",
+        "autoConnect": true,
+        "queryTimeout": 30000
+    },
+    "dumpHistory": [
+        {
+            "id": "3b7a2f91-4c5d-4e8a-9f01-2b6c8d0e5a73",
+            "operationType": "dump",
+            "timestamp": "2026-08-22T18:04:11.000Z",
+            "database": "myapp",
+            "connectionName": "production",
+            "filePath": "/Users/you/.dbmux/dumps/myapp-20260822-1804.dump",
+            "fileSize": 48211043,
+            "status": "success"
+        },
+        {
+            "id": "a92d51c4-8e17-4b3f-b6a9-05d2f7c81e64",
+            "operationType": "restore",
+            "timestamp": "2026-08-21T10:31:52.000Z",
+            "database": "myapp_staging",
+            "connectionName": "local",
+            "filePath": "/Users/you/.dbmux/dumps/myapp-20260821-1031.dump",
+            "fileSize": 47955210,
+            "status": "success"
+        }
+    ]
+}
+```
+
+`defaultConnection` names one entry in `connections`. Commands fall back to
+it when no session is active.
+
+`settings.logLevel` accepts `debug`, `info`, `warn`, or `error`.
+`settings.autoConnect` is a boolean. `settings.queryTimeout` is a timeout
+for queries in milliseconds.
+
+## session.json
+
+`~/.dbmux/session.json` records the active connection:
+
+```json
+{
+    "activeConnection": "production"
+}
+```
+
+[connect](/docs/connect) writes it and [disconnect](/docs/disconnect)
+clears it. While it exists, commands use that connection without extra
+flags.
+
+## dumps
+
+Created dumps go to `~/.dbmux/dumps/`. The dump and restore commands accept
+paths relative to this folder, absolute paths, or paths relative to the
+current directory.
+
+## How commands pick a connection
+
+Every command that needs a database resolves one in this order:
+
+1. An explicit `-n <name>` flag naming a saved connection.
+2. The active session connection from `session.json`.
+3. The `defaultConnection` from `config.json`.
+4. None of the above: the command exits with an error.
+
+[status](/docs/status) shows which connection wins right now.
+
+## Related commands
+
+- [config](/docs/config) edits this file without opening an editor.
+- [status](/docs/status) prints the resolved connection.
+- [disconnect](/docs/disconnect) removes the active session.

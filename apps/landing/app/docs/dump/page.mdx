@@ -1,0 +1,142 @@
+export const metadata = {
+    title: "dump",
+    description: "Create, delete, and review PostgreSQL database dumps.",
+};
+
+# dump
+
+Create dumps with pg_dump, delete ones you no longer want, and list past
+dumps. Dumping requires the `pg_dump` binary on your PATH and a PostgreSQL
+connection. This command group is restricted to PostgreSQL.
+
+## Usage
+
+```bash
+dbmux dump <subcommand> [options]
+```
+
+Three subcommands exist: `create`, `delete`, and `history`.
+
+## dump create
+
+```bash
+dbmux dump create [options]
+```
+
+| Option         | Alias | Type                                        | Description                       |
+| -------------- | ----- | ------------------------------------------- | --------------------------------- |
+| `--database`   | `-d`  | string                                      | Database to dump                  |
+| `--connection` | `-n`  | string                                      | Named saved connection to use     |
+| `--format`     | `-f`  | `custom` \| `plain` \| `directory` \| `tar` | Dump format, defaults to `custom` |
+| `--output`     | `-o`  | string                                      | Base name for the output file     |
+| `--verbose`    |       | boolean                                     | Show pg_dump output               |
+
+Without `-d`, dbmux fetches the live databases and shows an interactive
+picker that includes each database's size and owner.
+
+The output filename always ends with a timestamp and the `.dump` extension,
+regardless of `--format`. Passing `-o` sets the base name; dbmux still appends
+the timestamp and extension unless your `-o` name already includes its own
+extension.
+
+Without `-o`, dbmux prompts you for a filename and asks you to confirm
+before dumping.
+
+Dumps that reach execution are recorded in the dump history, failures
+included. Earlier exits, like a missing `pg_dump` or no configured
+connection, leave no history entry.
+
+### Examples
+
+Pick a database interactively:
+
+```bash
+dbmux dump create
+```
+
+Dump a named database:
+
+```bash
+dbmux dump create -d myapp_production
+```
+
+Set the base name and let dbmux add the timestamp:
+
+```bash
+dbmux dump create -d mydb -o my-backup
+```
+
+Write a plain SQL dump with full output:
+
+```bash
+dbmux dump create -d mydb --format plain --verbose
+```
+
+Dump through a named connection:
+
+```bash
+dbmux dump create -n production -d mydb
+```
+
+## dump delete
+
+```bash
+dbmux dump delete [options]
+```
+
+| Option    | Alias | Type    | Description                  |
+| --------- | ----- | ------- | ---------------------------- |
+| `--file`  | `-f`  | string  | Dump file to delete          |
+| `--force` | `-F`  | boolean | Skip the confirmation prompt |
+
+`-f` accepts absolute paths, paths relative to `~/.dbmux/dumps/`, or paths
+relative to the current directory. Without `-f`, dbmux shows an interactive
+picker of dump files ending in `.dump`, `.dmp`, `.sql`, `.gz`, or `.tar`.
+
+Deleting asks for confirmation unless you pass `-F`. The matching history
+entry gets marked as deleted.
+
+### Examples
+
+Pick a file interactively:
+
+```bash
+dbmux dump delete
+```
+
+Delete a named dump from the dumps folder:
+
+```bash
+dbmux dump delete -f backup.dump
+```
+
+Delete without the confirmation prompt:
+
+```bash
+dbmux dump delete -f backup.dump -F
+```
+
+## dump history
+
+```bash
+dbmux dump history [options]
+```
+
+| Option     | Alias | Type              | Description     |
+| ---------- | ----- | ----------------- | --------------- |
+| `--limit`  | `-l`  | number            | Entries to show |
+| `--format` | `-f`  | `table` \| `json` | Output format   |
+
+Prints the same listing as `dbmux history list -t dump`.
+
+### Example
+
+```bash
+dbmux dump history -l 5 -f json
+```
+
+## Related commands
+
+- [restore](/docs/restore) brings dumps back into databases.
+- [history](/docs/history) lists records across dumps and restores.
+- [configuration](/docs/configuration) shows where dump files land.

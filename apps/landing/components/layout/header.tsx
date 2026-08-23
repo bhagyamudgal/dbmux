@@ -6,17 +6,21 @@ import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { Github, Menu, Moon, Sun, X } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const navLinks = [
-    { href: "#features", label: "Features" },
-    { href: "#installation", label: "Installation" },
-    { href: "#how-it-works", label: "How it Works" },
+    { href: "/docs", label: "Docs" },
+    { href: "/#features", label: "Features" },
+    { href: "/#installation", label: "Installation" },
+    { href: "/#how-it-works", label: "How it Works" },
 ];
 
 export function Header() {
     const { theme, toggleTheme } = useTheme();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const pathname = usePathname();
+    const isDocsActive = pathname.startsWith("/docs");
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary/10 bg-background/80 backdrop-blur-md">
@@ -27,15 +31,27 @@ export function Header() {
                     </Link>
 
                     <nav className="hidden items-center gap-8 md:flex">
-                        {navLinks.map((link) => (
-                            <a
-                                key={link.href}
-                                href={link.href}
-                                className="text-sm text-muted-foreground transition-colors hover:text-primary"
-                            >
-                                {link.label}
-                            </a>
-                        ))}
+                        {navLinks.map((link) => {
+                            const isCurrent =
+                                link.href === "/docs" && isDocsActive;
+                            return (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    aria-current={
+                                        isCurrent ? "page" : undefined
+                                    }
+                                    className={cn(
+                                        "text-sm transition-colors hover:text-primary",
+                                        isCurrent
+                                            ? "text-primary"
+                                            : "text-muted-foreground"
+                                    )}
+                                >
+                                    {link.label}
+                                </Link>
+                            );
+                        })}
                     </nav>
 
                     <div className="flex items-center gap-2">
@@ -91,16 +107,28 @@ export function Header() {
                     )}
                 >
                     <nav className="flex flex-col gap-2">
-                        {navLinks.map((link) => (
-                            <a
-                                key={link.href}
-                                href={link.href}
-                                className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                {link.label}
-                            </a>
-                        ))}
+                        {navLinks.map((link) => {
+                            const isCurrent =
+                                link.href === "/docs" && isDocsActive;
+                            return (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    aria-current={
+                                        isCurrent ? "page" : undefined
+                                    }
+                                    className={cn(
+                                        "rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-primary",
+                                        isCurrent
+                                            ? "text-primary"
+                                            : "text-muted-foreground"
+                                    )}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    {link.label}
+                                </Link>
+                            );
+                        })}
                         <a
                             href="https://github.com/bhagyamudgal/dbmux"
                             target="_blank"

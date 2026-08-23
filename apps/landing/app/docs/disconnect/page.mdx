@@ -1,0 +1,29 @@
+export const metadata = {
+    title: "disconnect",
+    description: "Clear the active connection session.",
+};
+
+# disconnect
+
+Clear the active connection session. dbmux empties
+`~/.dbmux/session.json`, so later commands fall back to your default
+connection instead of the session one. The command takes no options.
+
+Saved connections are untouched. Only the session goes away.
+
+## Usage
+
+```bash
+dbmux disconnect
+```
+
+## Examples
+
+```bash
+dbmux disconnect
+```
+
+## Related commands
+
+- [connect](/docs/connect) starts a new session.
+- [status](/docs/status) shows what is active before and after.

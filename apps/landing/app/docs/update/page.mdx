@@ -1,0 +1,50 @@
+export const metadata = {
+    title: "update",
+    description: "Update dbmux to the latest version.",
+};
+
+# update
+
+Update dbmux to the latest version. How the update happens depends on how
+dbmux was installed.
+
+## Usage
+
+```bash
+dbmux update [options]
+```
+
+## Options
+
+| Option    | Alias | Type    | Description                                |
+| --------- | ----- | ------- | ------------------------------------------ |
+| `--check` | `-c`  | boolean | Only report whether a newer version exists |
+
+## Install methods
+
+Standalone binary installs: dbmux downloads the release asset from GitHub,
+verifies its SHA256 checksum, and swaps the binary only after the checksum
+matches.
+
+npm, bun, and pnpm global installs: dbmux reruns your package manager's own
+update command.
+
+Source checkouts: dbmux does not self-update and points you at git instead.
+
+## Examples
+
+Check without updating:
+
+```bash
+dbmux update --check
+```
+
+Update in place:
+
+```bash
+dbmux update
+```
+
+## Related commands
+
+- [Introduction](/docs) lists the supported install methods.

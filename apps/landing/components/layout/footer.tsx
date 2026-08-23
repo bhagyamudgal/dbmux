@@ -1,4 +1,5 @@
 import { Github, Package, type LucideIcon } from "lucide-react";
+import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
 
 type FooterLink = {
@@ -15,14 +16,14 @@ type FooterLinks = {
 
 const footerLinks: FooterLinks = {
     product: [
-        { label: "Features", href: "#features" },
-        { label: "Installation", href: "#installation" },
-        { label: "How it Works", href: "#how-it-works" },
+        { label: "Features", href: "/#features" },
+        { label: "Installation", href: "/#installation" },
+        { label: "How it Works", href: "/#how-it-works" },
     ],
     resources: [
         {
             label: "Documentation",
-            href: "https://github.com/bhagyamudgal/dbmux#readme",
+            href: "/docs",
         },
         {
             label: "Changelog",
@@ -69,12 +70,12 @@ export function Footer() {
                             <ul className="mt-4 space-y-3">
                                 {footerLinks.product.map((link) => (
                                     <li key={link.href}>
-                                        <a
+                                        <Link
                                             href={link.href}
                                             className="text-sm text-muted-foreground transition-colors hover:text-primary"
                                         >
                                             {link.label}
-                                        </a>
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>
@@ -85,18 +86,33 @@ export function Footer() {
                                 Resources
                             </h3>
                             <ul className="mt-4 space-y-3">
-                                {footerLinks.resources.map((link) => (
-                                    <li key={link.href}>
-                                        <a
-                                            href={link.href}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-sm text-muted-foreground transition-colors hover:text-primary"
-                                        >
-                                            {link.label}
-                                        </a>
-                                    </li>
-                                ))}
+                                {footerLinks.resources.map((link) => {
+                                    const isInternal =
+                                        link.href.startsWith("/");
+                                    const className =
+                                        "text-sm text-muted-foreground transition-colors hover:text-primary";
+                                    return (
+                                        <li key={link.href}>
+                                            {isInternal ? (
+                                                <Link
+                                                    href={link.href}
+                                                    className={className}
+                                                >
+                                                    {link.label}
+                                                </Link>
+                                            ) : (
+                                                <a
+                                                    href={link.href}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={className}
+                                                >
+                                                    {link.label}
+                                                </a>
+                                            )}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </div>
 
