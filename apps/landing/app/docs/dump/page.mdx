@@ -42,7 +42,9 @@ extension.
 Without `-o`, dbmux prompts you for a filename and asks you to confirm
 before dumping.
 
-Every attempt is recorded in the dump history, failures included.
+Dumps that reach execution are recorded in the dump history, failures
+included. Earlier exits, like a missing `pg_dump` or no configured
+connection, leave no history entry.
 
 ### Examples
 

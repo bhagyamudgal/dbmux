@@ -141,7 +141,7 @@ See [/docs/configuration](https://dbmux.com/docs/configuration) for every field.
 
 This is a Turborepo monorepo with Bun workspaces:
 
-```
+```text
 dbmux/
 ├── apps/
 │   ├── landing/                  # Next.js landing page and docs
