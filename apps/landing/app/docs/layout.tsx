@@ -22,10 +22,7 @@ export default function DocsLayout({
                 <aside className="sticky top-20 hidden h-[calc(100dvh-5rem)] w-56 shrink-0 overflow-y-auto py-10 lg:block">
                     <DocsSidebarRail />
                 </aside>
-                <main
-                    id="main-content"
-                    className="min-w-0 flex-1 py-10"
-                >
+                <main id="main-content" className="min-w-0 flex-1 py-10">
                     <DocsSidebarStrip />
                     <article className="docs-prose mx-auto max-w-3xl">
                         {children}

@@ -26,11 +26,11 @@ Delete (DROP) a database from the server.
 dbmux db delete [options]
 ```
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--database` | `-d` | string | Database to drop |
-| `--connection` | `-n` | string | Named saved connection to use |
-| `--force` | `-F` | boolean | Skip the confirmation prompts |
+| Option         | Alias | Type    | Description                   |
+| -------------- | ----- | ------- | ----------------------------- |
+| `--database`   | `-d`  | string  | Database to drop              |
+| `--connection` | `-n`  | string  | Named saved connection to use |
+| `--force`      | `-F`  | boolean | Skip the confirmation prompts |
 
 Without `-d`, dbmux shows a picker of databases on the server, leaving out
 `postgres`, `template0`, and `template1`.

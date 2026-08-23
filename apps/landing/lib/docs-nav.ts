@@ -35,12 +35,13 @@ export const docsNav: DocsNavSection[] = [
 ];
 
 export const flatDocsItems: DocsNavItem[] = docsNav.flatMap(
-    (section) => section.items,
+    (section) => section.items
 );
 
-export function getDocsNeighbors(
-    pathname: string,
-): { previous?: DocsNavItem; next?: DocsNavItem } {
+export function getDocsNeighbors(pathname: string): {
+    previous?: DocsNavItem;
+    next?: DocsNavItem;
+} {
     const index = flatDocsItems.findIndex((item) => item.href === pathname);
     if (index === -1) return {};
     return {

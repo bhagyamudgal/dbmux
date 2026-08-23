@@ -21,7 +21,7 @@ function NavLink({ href, title }: { href: string; title: string }) {
                 isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                focusRing,
+                focusRing
             )}
         >
             {title}
@@ -40,10 +40,7 @@ export function DocsSidebarRail() {
                     <ul className="mt-2 space-y-0.5">
                         {section.items.map((item) => (
                             <li key={item.href}>
-                                <NavLink
-                                    href={item.href}
-                                    title={item.title}
-                                />
+                                <NavLink href={item.href} title={item.title} />
                             </li>
                         ))}
                     </ul>
@@ -74,13 +71,13 @@ export function DocsSidebarStrip() {
                                 isActive
                                     ? "border-primary/40 bg-primary/10 text-primary"
                                     : "border-border text-muted-foreground hover:text-foreground",
-                                focusRing,
+                                focusRing
                             )}
                         >
                             {item.title}
                         </Link>
                     );
-                }),
+                })
             )}
         </nav>
     );

@@ -22,18 +22,18 @@ dbmux connect [options]
 
 ## Options
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--name` | `-n` | string | Load a saved connection by name instead of entering details |
-| `--url` | `-U` | string | Database URL, e.g. `postgresql://user:password@localhost:5432/mydb` |
-| `--type` | | `postgresql` \| `sqlite` | Database type when passing individual fields |
-| `--host` | `-H` | string | Database host |
-| `--port` | `-p` | number | Port between 1 and 65535 |
-| `--user` | `-u` | string | Database user |
-| `--password` | `-w` | string | Database password |
-| `--database` | `-d` | string | Database name |
-| `--ssl` | | boolean | Connect over SSL |
-| `--test` | | boolean | Test the connection and stop before establishing a session |
+| Option       | Alias | Type                     | Description                                                         |
+| ------------ | ----- | ------------------------ | ------------------------------------------------------------------- |
+| `--name`     | `-n`  | string                   | Load a saved connection by name instead of entering details         |
+| `--url`      | `-U`  | string                   | Database URL, e.g. `postgresql://user:password@localhost:5432/mydb` |
+| `--type`     |       | `postgresql` \| `sqlite` | Database type when passing individual fields                        |
+| `--host`     | `-H`  | string                   | Database host                                                       |
+| `--port`     | `-p`  | number                   | Port between 1 and 65535                                            |
+| `--user`     | `-u`  | string                   | Database user                                                       |
+| `--password` | `-w`  | string                   | Database password                                                   |
+| `--database` | `-d`  | string                   | Database name                                                       |
+| `--ssl`      |       | boolean                  | Connect over SSL                                                    |
+| `--test`     |       | boolean                  | Test the connection and stop before establishing a session          |
 
 ## How arguments are resolved
 

@@ -23,11 +23,11 @@ Two subcommands exist: `list` and `clear`.
 dbmux history list [options]
 ```
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--limit` | `-l` | number | Entries to show |
-| `--type` | `-t` | `dump` \| `restore` | Filter to one operation type |
-| `--format` | `-f` | `table` \| `json` | Output format, defaults to `table` |
+| Option     | Alias | Type                | Description                        |
+| ---------- | ----- | ------------------- | ---------------------------------- |
+| `--limit`  | `-l`  | number              | Entries to show                    |
+| `--type`   | `-t`  | `dump` \| `restore` | Filter to one operation type       |
+| `--format` | `-f`  | `table` \| `json`   | Output format, defaults to `table` |
 
 The table shows these columns: ID (truncated), Type, Database, Connection,
 File, Size, Status, and Timestamp. Status reads OK, FAILED, or DELETED.
@@ -58,9 +58,9 @@ dbmux history list -l 10 -f json
 dbmux history clear [options]
 ```
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--type` | `-t` | `dump` \| `restore` | Clear only this operation type |
+| Option   | Alias | Type                | Description                    |
+| -------- | ----- | ------------------- | ------------------------------ |
+| `--type` | `-t`  | `dump` \| `restore` | Clear only this operation type |
 
 Omit `-t` and every entry goes. dbmux asks for confirmation first.
 

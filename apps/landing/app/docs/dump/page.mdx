@@ -23,13 +23,13 @@ Three subcommands exist: `create`, `delete`, and `history`.
 dbmux dump create [options]
 ```
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--database` | `-d` | string | Database to dump |
-| `--connection` | `-n` | string | Named saved connection to use |
-| `--format` | `-f` | `custom` \| `plain` \| `directory` \| `tar` | Dump format, defaults to `custom` |
-| `--output` | `-o` | string | Base name for the output file |
-| `--verbose` | | boolean | Show pg_dump output |
+| Option         | Alias | Type                                        | Description                       |
+| -------------- | ----- | ------------------------------------------- | --------------------------------- |
+| `--database`   | `-d`  | string                                      | Database to dump                  |
+| `--connection` | `-n`  | string                                      | Named saved connection to use     |
+| `--format`     | `-f`  | `custom` \| `plain` \| `directory` \| `tar` | Dump format, defaults to `custom` |
+| `--output`     | `-o`  | string                                      | Base name for the output file     |
+| `--verbose`    |       | boolean                                     | Show pg_dump output               |
 
 Without `-d`, dbmux fetches the live databases and shows an interactive
 picker that includes each database's size and owner.
@@ -82,10 +82,10 @@ dbmux dump create -n production -d mydb
 dbmux dump delete [options]
 ```
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--file` | `-f` | string | Dump file to delete |
-| `--force` | `-F` | boolean | Skip the confirmation prompt |
+| Option    | Alias | Type    | Description                  |
+| --------- | ----- | ------- | ---------------------------- |
+| `--file`  | `-f`  | string  | Dump file to delete          |
+| `--force` | `-F`  | boolean | Skip the confirmation prompt |
 
 `-f` accepts absolute paths, paths relative to `~/.dbmux/dumps/`, or paths
 relative to the current directory. Without `-f`, dbmux shows an interactive
@@ -120,10 +120,10 @@ dbmux dump delete -f backup.dump -F
 dbmux dump history [options]
 ```
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--limit` | `-l` | number | Entries to show |
-| `--format` | `-f` | `table` \| `json` | Output format |
+| Option     | Alias | Type              | Description     |
+| ---------- | ----- | ----------------- | --------------- |
+| `--limit`  | `-l`  | number            | Entries to show |
+| `--format` | `-f`  | `table` \| `json` | Output format   |
 
 Prints the same listing as `dbmux history list -t dump`.
 

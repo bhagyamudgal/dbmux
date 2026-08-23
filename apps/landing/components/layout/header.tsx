@@ -45,7 +45,7 @@ export function Header() {
                                         "text-sm transition-colors hover:text-primary",
                                         isCurrent
                                             ? "text-primary"
-                                            : "text-muted-foreground",
+                                            : "text-muted-foreground"
                                     )}
                                 >
                                     {link.label}
@@ -121,7 +121,7 @@ export function Header() {
                                         "rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-primary",
                                         isCurrent
                                             ? "text-primary"
-                                            : "text-muted-foreground",
+                                            : "text-muted-foreground"
                                     )}
                                     onClick={() => setMobileMenuOpen(false)}
                                 >

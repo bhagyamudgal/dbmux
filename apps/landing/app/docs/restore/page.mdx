@@ -24,15 +24,15 @@ Two subcommands exist: `run` and `history`.
 dbmux restore run [options]
 ```
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--file` | `-f` | string | Dump file to restore |
-| `--database` | `-d` | string | Target database |
-| `--connection` | `-n` | string | Named saved connection to use |
-| `--create` | `-c` | boolean | Create the target database first |
-| `--drop` | | boolean | Drop the target database before restoring |
-| `--verbose` | | boolean | Show restore tool output |
-| `--fromHistory` | `-H` | boolean | Pick the dump from recent history |
+| Option          | Alias | Type    | Description                               |
+| --------------- | ----- | ------- | ----------------------------------------- |
+| `--file`        | `-f`  | string  | Dump file to restore                      |
+| `--database`    | `-d`  | string  | Target database                           |
+| `--connection`  | `-n`  | string  | Named saved connection to use             |
+| `--create`      | `-c`  | boolean | Create the target database first          |
+| `--drop`        |       | boolean | Drop the target database before restoring |
+| `--verbose`     |       | boolean | Show restore tool output                  |
+| `--fromHistory` | `-H`  | boolean | Pick the dump from recent history         |
 
 ### Choosing a file
 
@@ -98,10 +98,10 @@ dbmux restore run -f ~/Downloads/prod.dump -n staging -d app --create --verbose
 dbmux restore history [options]
 ```
 
-| Option | Alias | Type | Description |
-| --- | --- | --- | --- |
-| `--limit` | `-l` | number | Entries to show |
-| `--format` | `-f` | `table` \| `json` | Output format |
+| Option     | Alias | Type              | Description     |
+| ---------- | ----- | ----------------- | --------------- |
+| `--limit`  | `-l`  | number            | Entries to show |
+| `--format` | `-f`  | `table` \| `json` | Output format   |
 
 ### Example
 

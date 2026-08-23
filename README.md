@@ -29,19 +29,19 @@ dbmux restore run -f backup.dump -d mydb_copy --create
 
 ## Commands
 
-| Command | What it does | Docs |
-| --- | --- | --- |
-| `connect` | Connect to a database and save it as a named connection | [/docs/connect](https://dbmux.com/docs/connect) |
-| `query` | Execute SQL inline or from a file, output as table, JSON, or CSV | [/docs/query](https://dbmux.com/docs/query) |
-| `list` | List databases, tables, or saved connections | [/docs/list](https://dbmux.com/docs/list) |
-| `dump create` / `dump delete` / `dump history` | Back up databases with pg_dump, manage dump files | [/docs/dump](https://dbmux.com/docs/dump) |
-| `restore run` / `restore history` | Restore from dumps with pg_restore or psql | [/docs/restore](https://dbmux.com/docs/restore) |
-| `db delete` | Drop a database, with confirmations | [/docs/db](https://dbmux.com/docs/db) |
-| `config add/list/remove/default/show/path/rename/manage` | Manage saved connections | [/docs/config](https://dbmux.com/docs/config) |
-| `history list` / `history clear` | View and clear dump/restore history | [/docs/history](https://dbmux.com/docs/history) |
-| `status` | Show the active and default connections | [/docs/status](https://dbmux.com/docs/status) |
-| `disconnect` | Clear the active session connection | [/docs/disconnect](https://dbmux.com/docs/disconnect) |
-| `update` | Self-update binaries or global installs | [/docs/update](https://dbmux.com/docs/update) |
+| Command                                                  | What it does                                                     | Docs                                                  |
+| -------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------- |
+| `connect`                                                | Connect to a database and save it as a named connection          | [/docs/connect](https://dbmux.com/docs/connect)       |
+| `query`                                                  | Execute SQL inline or from a file, output as table, JSON, or CSV | [/docs/query](https://dbmux.com/docs/query)           |
+| `list`                                                   | List databases, tables, or saved connections                     | [/docs/list](https://dbmux.com/docs/list)             |
+| `dump create` / `dump delete` / `dump history`           | Back up databases with pg_dump, manage dump files                | [/docs/dump](https://dbmux.com/docs/dump)             |
+| `restore run` / `restore history`                        | Restore from dumps with pg_restore or psql                       | [/docs/restore](https://dbmux.com/docs/restore)       |
+| `db delete`                                              | Drop a database, with confirmations                              | [/docs/db](https://dbmux.com/docs/db)                 |
+| `config add/list/remove/default/show/path/rename/manage` | Manage saved connections                                         | [/docs/config](https://dbmux.com/docs/config)         |
+| `history list` / `history clear`                         | View and clear dump/restore history                              | [/docs/history](https://dbmux.com/docs/history)       |
+| `status`                                                 | Show the active and default connections                          | [/docs/status](https://dbmux.com/docs/status)         |
+| `disconnect`                                             | Clear the active session connection                              | [/docs/disconnect](https://dbmux.com/docs/disconnect) |
+| `update`                                                 | Self-update binaries or global installs                          | [/docs/update](https://dbmux.com/docs/update)         |
 
 ## Why dbmux
 
