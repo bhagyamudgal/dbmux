@@ -1,0 +1,100 @@
+export const metadata = {
+    title: "connect",
+    description:
+        "Connect dbmux to a PostgreSQL database and save it as a named connection.",
+};
+
+# connect
+
+Connect to a database and save it as a named connection. The connection you
+connect with becomes the active session connection, so later commands like
+`query` or `dump` use it without repeating any details.
+
+PostgreSQL is fully supported. SQLite can be selected in the interactive flow,
+but the driver is not implemented yet, so connections fail once dbmux tries to
+reach the server.
+
+## Usage
+
+```bash
+dbmux connect [options]
+```
+
+## Options
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--name` | `-n` | string | Load a saved connection by name instead of entering details |
+| `--url` | `-U` | string | Database URL, e.g. `postgresql://user:password@localhost:5432/mydb` |
+| `--type` | | `postgresql` \| `sqlite` | Database type when passing individual fields |
+| `--host` | `-H` | string | Database host |
+| `--port` | `-p` | number | Port between 1 and 65535 |
+| `--user` | `-u` | string | Database user |
+| `--password` | `-w` | string | Database password |
+| `--database` | `-d` | string | Database name |
+| `--ssl` | | boolean | Connect over SSL |
+| `--test` | | boolean | Test the connection and stop before establishing a session |
+
+## How arguments are resolved
+
+When you run `dbmux connect` with no flags, dbmux walks down this list until
+something matches:
+
+1. A `-n <name>` flag loads a saved connection and activates it.
+2. A `--url` or a set of individual fields builds a new connection. dbmux asks
+   whether to save it under a name (the prompt defaults to yes) and activates
+   the connection immediately if you confirm.
+3. If you already have saved connections, an interactive picker lists them
+   sorted by last use, plus one entry to enter a brand new connection.
+4. With no saved connections at all, dbmux walks you through host, port, user,
+   password, database, and SSL step by step.
+
+After the connection is resolved, dbmux runs a live connection test before
+establishing the session. A failed test ends the command, but note that a
+connection you confirmed saving in step 2 or 4 is already written to your
+config by then. `config add` works the other way around: it tests first and
+refuses to save when the test fails.
+
+## URL format
+
+Both `postgresql://` and `postgres://` schemes work. Add `?ssl=true` or
+`?sslmode=require` to enable SSL:
+
+```bash
+dbmux connect -U "postgresql://user:password@localhost:5432/mydb?ssl=true"
+```
+
+A missing host defaults to `localhost`, and missing port and SSL settings fall
+back to the driver defaults.
+
+## Examples
+
+Connect with a URL:
+
+```bash
+dbmux connect -U "postgresql://user:password@localhost:5432/mydb"
+```
+
+Connect by naming individual fields:
+
+```bash
+dbmux connect --type postgresql -H localhost -p 5432 -u postgres -d myapp
+```
+
+Activate a previously saved connection:
+
+```bash
+dbmux connect -n production
+```
+
+Verify credentials without saving anything:
+
+```bash
+dbmux connect -U "postgresql://user:password@localhost:5432/mydb" --test
+```
+
+## Related commands
+
+- [config](/docs/config) manages saved connections after they exist.
+- [status](/docs/status) shows which connection is currently active.
+- [disconnect](/docs/disconnect) clears the active session connection.

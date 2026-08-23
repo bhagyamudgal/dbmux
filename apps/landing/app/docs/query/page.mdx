@@ -1,0 +1,83 @@
+export const metadata = {
+    title: "query",
+    description: "Execute SQL queries against a PostgreSQL database.",
+};
+
+# query
+
+Run SQL from a string or a file and get rows back as a table, JSON, or CSV.
+Exactly one input source is required. Passing neither `-q` nor `-f`, or
+both, exits with an error.
+
+PostgreSQL is the only implemented driver today, so queries need a
+PostgreSQL connection.
+
+## Usage
+
+```bash
+dbmux query [options]
+```
+
+## Options
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--sql` | `-q` | string | SQL text to execute |
+| `--file` | `-f` | string | File containing SQL to execute |
+| `--connection` | `-n` | string | Named saved connection to use |
+| `--database` | `-d` | string | Database on the same server |
+| `--format` | | `table` \| `json` \| `csv` | Output format, defaults to `table` |
+| `--limit` | `-l` | number | Row limit appended to the query, minimum 1 |
+
+## Automatic row limits
+
+With `-l n`, dbmux appends `LIMIT n` to your SQL unless the statement
+already contains the word `limit` in any casing. A query that carries its
+own LIMIT clause passes through untouched.
+
+## Output
+
+Rows print in the chosen format, followed by a summary line reporting the
+row count and duration:
+
+```text
+Query successful: N rows in Xms
+```
+
+## Examples
+
+Run a SELECT with its own limit:
+
+```bash
+dbmux query -q "SELECT * FROM users LIMIT 10"
+```
+
+Execute a file of statements:
+
+```bash
+dbmux query -f queries.sql
+```
+
+Get comma separated output:
+
+```bash
+dbmux query -q "SELECT * FROM users" --format csv
+```
+
+Cap results at 100 rows:
+
+```bash
+dbmux query -q "SELECT * FROM logs" -l 100
+```
+
+Query through a named connection:
+
+```bash
+dbmux query -n production -q "SELECT version()"
+```
+
+## Related commands
+
+- [list](/docs/list) shows databases and tables worth querying.
+- [connect](/docs/connect) saves the connections `-n` refers to.
+- [configuration](/docs/configuration) explains which connection gets picked.

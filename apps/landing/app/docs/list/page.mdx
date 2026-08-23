@@ -1,0 +1,81 @@
+export const metadata = {
+    title: "list",
+    description: "List databases, tables, or saved connections.",
+};
+
+# list
+
+Show what exists: databases on the connected server, tables in one schema,
+or the connections saved in your config. Each run targets exactly one of
+the three.
+
+PostgreSQL is the only implemented driver today, so the server-facing
+branches need a working connection.
+
+## Usage
+
+```bash
+dbmux list [flags]
+```
+
+## Options
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--databases` | `db` | boolean | List databases on the server |
+| `--tables` | `-t` | boolean | List tables in the selected schema |
+| `--connections` | `-c` | boolean | List saved connections, names only |
+| `--connection` | `-n` | string | Named saved connection to use |
+| `--schema` | | string | Schema to list tables from, defaults to `public` |
+| `--database` | `-d` | string | Inspect another database on the same server |
+
+## What each flag prints
+
+The three target flags are mutually exclusive. With no target flag at all,
+dbmux exits with an error telling you to pick one.
+
+`--connections` reads your local config and prints connection names only.
+
+`--databases` asks the connected server and prints a table with Name,
+Owner, Encoding, and Size columns.
+
+`--tables` lists the tables of one schema, defaulting to `public`. Combine
+it with `--schema` to list a different one.
+
+## Examples
+
+List every database on the server:
+
+```bash
+dbmux list --databases
+```
+
+List tables in the public schema:
+
+```bash
+dbmux list --tables --schema public
+```
+
+List saved connection names:
+
+```bash
+dbmux list --connections
+```
+
+List databases through a named connection:
+
+```bash
+dbmux list --databases -n production
+```
+
+Point the listing at another database:
+
+```bash
+dbmux list --databases -d other_db
+```
+
+## Related commands
+
+- [connect](/docs/connect) creates the connections this command lists.
+- [query](/docs/query) runs SQL against the same server.
+- [config](/docs/config) manages the saved connections behind `--connections`.

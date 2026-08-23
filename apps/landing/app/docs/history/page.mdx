@@ -1,0 +1,85 @@
+export const metadata = {
+    title: "history",
+    description: "View and manage dump and restore history.",
+};
+
+# history
+
+View and clear the records dbmux keeps for dumps and restores. Entries
+appear automatically as dump create and restore run finish, successful or
+not. The records live in `config.json`, next to your connections.
+
+## Usage
+
+```bash
+dbmux history <subcommand> [options]
+```
+
+Two subcommands exist: `list` and `clear`.
+
+## history list
+
+```bash
+dbmux history list [options]
+```
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--limit` | `-l` | number | Entries to show |
+| `--type` | `-t` | `dump` \| `restore` | Filter to one operation type |
+| `--format` | `-f` | `table` \| `json` | Output format, defaults to `table` |
+
+The table shows these columns: ID (truncated), Type, Database, Connection,
+File, Size, Status, and Timestamp. Status reads OK, FAILED, or DELETED.
+
+### Examples
+
+List everything:
+
+```bash
+dbmux history list
+```
+
+Only dumps:
+
+```bash
+dbmux history list -t dump
+```
+
+Ten entries as JSON:
+
+```bash
+dbmux history list -l 10 -f json
+```
+
+## history clear
+
+```bash
+dbmux history clear [options]
+```
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--type` | `-t` | `dump` \| `restore` | Clear only this operation type |
+
+Omit `-t` and every entry goes. dbmux asks for confirmation first.
+
+### Examples
+
+Clear everything after confirming:
+
+```bash
+dbmux history clear
+```
+
+Clear only restore records:
+
+```bash
+dbmux history clear -t restore
+```
+
+## Related commands
+
+- [dump](/docs/dump) writes dump entries, including its own history view.
+- [restore](/docs/restore) writes restore entries.
+- [configuration](/docs/configuration) shows where the records are stored.

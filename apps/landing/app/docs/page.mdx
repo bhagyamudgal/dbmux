@@ -1,0 +1,80 @@
+export const metadata = {
+    title: "Introduction",
+    description:
+        "dbmux wraps PostgreSQL dump, restore, and query workflows behind named connections and automatic history.",
+};
+
+# Introduction
+
+dbmux is a command line tool for everyday PostgreSQL work. It wraps dump,
+restore, and query workflows behind short connection names, so you stop
+retyping hosts and passwords. Every dump and restore is recorded to a
+history you can list and clear later.
+
+## Installation
+
+Install globally with npm:
+
+```bash
+npm install -g dbmux
+```
+
+Or run the install script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bhagyamudgal/dbmux/main/install.sh | bash
+```
+
+## Quick start
+
+Connect once. dbmux tests the connection, saves it under a name, and makes
+it the active session connection:
+
+```bash
+dbmux connect -U "postgresql://user:password@localhost:5432/mydb"
+```
+
+Query the database without repeating any details:
+
+```bash
+dbmux query -q "SELECT * FROM users LIMIT 10"
+```
+
+Create a dump. With no flags, dbmux shows a picker of live databases:
+
+```bash
+dbmux dump create
+```
+
+Restore one of your recent dumps into a fresh database:
+
+```bash
+dbmux restore run --fromHistory -d mydb_restored --create
+```
+
+Each step resolves its connection the same way: an explicit `-n` flag
+first, then the active session, then your configured default. The full
+order is described on the [configuration](/docs/configuration) page.
+
+## Commands
+
+| Command | Description |
+| --- | --- |
+| [connect](/docs/connect) | Connect to a database and save it as a named connection |
+| [query](/docs/query) | Execute SQL queries |
+| [list](/docs/list) | List databases, tables, or saved connections |
+| [dump](/docs/dump) | Create, delete, and review database dumps |
+| [restore](/docs/restore) | Restore dumps and review restore history |
+| [db](/docs/db) | Delete databases from the server |
+| [config](/docs/config) | Manage configuration and saved connections |
+| [history](/docs/history) | View and manage dump and restore history |
+| [status](/docs/status) | Show the current default connection |
+| [disconnect](/docs/disconnect) | Clear the active connection session |
+| [update](/docs/update) | Update dbmux to the latest version |
+
+## Database support
+
+PostgreSQL is fully supported today. SQLite appears in interactive prompts,
+but its driver is not implemented yet, so picking it fails once dbmux tries
+to reach the server. Dump, restore, and db delete are restricted to
+PostgreSQL.

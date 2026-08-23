@@ -1,0 +1,37 @@
+export const metadata = {
+    title: "status",
+    description: "Show which connection dbmux commands would use right now.",
+};
+
+# status
+
+Show the current default connection and the active session connection. The
+command takes no options.
+
+## Usage
+
+```bash
+dbmux status
+```
+
+## What it prints
+
+Both candidates appear: the default connection from `config.json` and the
+active session connection from `session.json`. Details print for whichever
+one is active. With no active session, dbmux falls back to printing the
+default.
+
+Which one wins follows the standard resolution order described on the
+[configuration](/docs/configuration) page.
+
+## Examples
+
+```bash
+dbmux status
+```
+
+## Related commands
+
+- [connect](/docs/connect) sets the session this command reports on.
+- [disconnect](/docs/disconnect) clears the active session.
+- [configuration](/docs/configuration) defines the resolution order.

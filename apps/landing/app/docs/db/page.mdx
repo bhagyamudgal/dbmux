@@ -1,0 +1,72 @@
+export const metadata = {
+    title: "db",
+    description: "Delete (DROP) databases from a PostgreSQL server.",
+};
+
+# db
+
+Database management commands. One subcommand exists today: `delete`, which
+drops an entire database from the server. This command is restricted to
+PostgreSQL.
+
+> Dropping a database destroys every table, row, and index inside it. The
+> operation is permanent. Take a dump first if there is any doubt.
+
+## Usage
+
+```bash
+dbmux db <subcommand> [options]
+```
+
+## db delete
+
+Delete (DROP) a database from the server.
+
+```bash
+dbmux db delete [options]
+```
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--database` | `-d` | string | Database to drop |
+| `--connection` | `-n` | string | Named saved connection to use |
+| `--force` | `-F` | boolean | Skip the confirmation prompts |
+
+Without `-d`, dbmux shows a picker of databases on the server, leaving out
+`postgres`, `template0`, and `template1`.
+
+Without `-F`, you confirm twice across two separate prompts. Before
+dropping, dbmux terminates active connections to the target so open clients
+cannot block it.
+
+### Examples
+
+Pick a database interactively:
+
+```bash
+dbmux db delete
+```
+
+Drop a named database:
+
+```bash
+dbmux db delete -d old_database
+```
+
+Skip the confirmations:
+
+```bash
+dbmux db delete -d old_database -F
+```
+
+Drop on a server reached through a named connection:
+
+```bash
+dbmux db delete -n production -d test_db
+```
+
+## Related commands
+
+- [dump](/docs/dump) takes a backup worth having before you drop anything.
+- [list](/docs/list) shows which databases exist on the server.
+- [restore](/docs/restore) brings a dump back as a new database.

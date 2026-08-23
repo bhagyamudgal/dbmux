@@ -1,5 +1,3 @@
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/sections/hero";
 import { VideoShowcase } from "@/components/sections/video-showcase";
 import { Features } from "@/components/sections/features";
@@ -16,15 +14,13 @@ export default function Home() {
                 size={32}
                 fill="oklch(0.72 0.19 145 / 0.06)"
             />
-            <Header />
-            <main>
+            <main id="main-content">
                 <Hero />
                 <VideoShowcase />
                 <Features />
                 <Installation />
                 <HowItWorks />
             </main>
-            <Footer />
         </div>
     );
 }

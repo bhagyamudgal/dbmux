@@ -68,7 +68,7 @@ Currently only PostgreSQL is fully implemented. MySQL and SQLite throw "not impl
 - Config: `~/.dbmux/config.json`
 - Session: `~/.dbmux/session.json`
 - Dumps: `~/.dbmux/dumps/`
-- History: `~/.dbmux/history.json`
+- History: `dumpHistory` array inside `~/.dbmux/config.json`
 
 ### Command Patterns
 

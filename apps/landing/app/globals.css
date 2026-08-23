@@ -200,3 +200,76 @@
 .text-glow-green {
     text-shadow: 0 0 30px var(--glow-green-strong);
 }
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@layer components {
+    .docs-prose {
+        @apply text-base;
+    }
+    .docs-prose h1 {
+        @apply mb-6 text-3xl font-bold tracking-tight text-foreground;
+    }
+    .docs-prose h2 {
+        @apply mt-12 mb-4 border-b border-border pb-2 text-xl font-semibold text-foreground;
+    }
+    .docs-prose h3 {
+        @apply mt-8 mb-3 text-lg font-semibold text-foreground;
+    }
+    .docs-prose p {
+        @apply my-4 leading-relaxed text-muted-foreground;
+    }
+    .docs-prose strong {
+        @apply font-semibold text-foreground;
+    }
+    .docs-prose ul {
+        @apply my-4 list-disc space-y-2 pl-5;
+    }
+    .docs-prose ol {
+        @apply my-4 list-decimal space-y-2 pl-5;
+    }
+    .docs-prose li {
+        @apply leading-relaxed text-muted-foreground marker:text-primary;
+    }
+    .docs-prose li > code,
+    .docs-prose p > code,
+    .docs-prose td > code {
+        @apply rounded-md bg-primary/10 px-1.5 py-0.5 font-mono text-[0.85em] text-primary [overflow-wrap:anywhere];
+    }
+    .docs-prose a {
+        @apply font-medium text-primary underline-offset-4 hover:underline;
+    }
+    .docs-prose blockquote {
+        @apply my-6 border-l-2 border-primary pl-4 text-muted-foreground italic;
+    }
+    .docs-prose hr {
+        @apply my-10 border-border;
+    }
+    .docs-prose table {
+        @apply w-full;
+    }
+    .docs-prose th {
+        @apply border-b border-border px-3 py-2 text-left font-semibold whitespace-nowrap text-foreground;
+    }
+    .docs-prose td {
+        @apply border-b border-border/50 px-3 py-2 align-top text-muted-foreground;
+    }
+    .docs-prose td:first-child,
+    .docs-prose th:first-child {
+        @apply font-mono text-xs;
+    }
+    .docs-prose figure[data-rehype-pretty-code-figure] {
+        @apply m-0;
+    }
+    .docs-prose figcaption[data-rehype-pretty-code-title] {
+        @apply mb-2 font-mono text-xs text-muted-foreground;
+    }
+}

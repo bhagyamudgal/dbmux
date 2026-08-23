@@ -1,0 +1,137 @@
+export const metadata = {
+    title: "config",
+    description: "Manage dbmux configuration and saved connections.",
+};
+
+# config
+
+Manage the connections saved in `~/.dbmux/config.json` and the file itself.
+Eight subcommands cover adding, inspecting, renaming, and removing
+connections, plus picking a default.
+
+## Usage
+
+```bash
+dbmux config <subcommand> [options]
+```
+
+| Subcommand | What it does |
+| --- | --- |
+| `add` | Save a new connection |
+| `list` | Print saved connections with details |
+| `remove` | Delete one or more saved connections |
+| `default` | Set the default connection |
+| `show` | Print config path, JSON, and summary |
+| `path` | Print only the config path |
+| `rename` | Rename a saved connection |
+| `manage` | Loop an interactive menu |
+
+## config add
+
+```bash
+dbmux config add
+```
+
+Takes no flags. An interactive walkthrough collects the connection details,
+then dbmux tests the connection live. A failed test saves nothing. When it
+asks for a name, the suggestion defaults to `user@host/database`.
+
+## config list
+
+```bash
+dbmux config list
+```
+
+Takes no flags. Prints each saved connection with its type, host, port,
+user, database, and SSL setting, and marks which one is the default.
+
+## config remove
+
+```bash
+dbmux config remove [options]
+```
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--name` | `-n` | string | Connection to remove |
+
+Pass `-n` to remove one connection by name, or run without it and pick any
+number of connections from a multi-select picker. Either way you confirm
+once before anything is deleted.
+
+### Example
+
+```bash
+dbmux config remove -n old-connection
+```
+
+## config default
+
+```bash
+dbmux config default -n <name>
+```
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--name` | `-n` | string | Connection to make the default (required) |
+
+Sets which saved connection commands fall back to when no session is
+active. See [configuration](/docs/configuration) for the full resolution
+order.
+
+### Example
+
+```bash
+dbmux config default -n production
+```
+
+## config show
+
+```bash
+dbmux config show
+```
+
+Takes no flags. Prints the config file path, its full JSON, and a summary.
+
+## config path
+
+```bash
+dbmux config path
+```
+
+Takes no flags. Prints only the path to `~/.dbmux/config.json`.
+
+## config rename
+
+```bash
+dbmux config rename [options]
+```
+
+| Option | Alias | Type | Description |
+| --- | --- | --- | --- |
+| `--name` | `-n` | string | Connection to rename |
+| `--newName` | `nn` | string | New name |
+
+Pass both flags to rename non-interactively, or neither and answer the
+prompts. Names that already exist are rejected.
+
+### Example
+
+```bash
+dbmux config rename -n old-name --newName new-name
+```
+
+## config manage
+
+```bash
+dbmux config manage
+```
+
+Takes no flags. Runs a looping menu with List, Add, Remove, Rename, Set
+default, and Exit entries, so you can reshape several things in one sitting.
+
+## Related commands
+
+- [configuration](/docs/configuration) documents the file these subcommands edit.
+- [connect](/docs/connect) saves connections as a side effect of connecting.
+- [status](/docs/status) shows which connection commands would use.
