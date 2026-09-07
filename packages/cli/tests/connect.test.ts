@@ -86,7 +86,7 @@ describe("executeConnectCommand", () => {
             throw new Error("not found");
         });
         select.mockResolvedValue("new");
-        confirm.mockResolvedValue(false); // Don't save
+        confirm.mockResolvedValue(false);
         await executeConnectCommand({ name: "not-found" });
         expect(logger.warn).toHaveBeenCalledWith(
             "Connection 'not-found' not found. Proceeding to create a new one."
@@ -116,10 +116,10 @@ describe("executeConnectCommand", () => {
 
     it("should create but not save a new connection", async () => {
         select.mockResolvedValue("new");
-        confirm.mockResolvedValue(false); // Don't save
+        confirm.mockResolvedValue(false);
         await executeConnectCommand({});
         expect(addConnection).not.toHaveBeenCalled();
-        expect(setActiveConnection).not.toHaveBeenCalled(); // Should not be set if not saved
+        expect(setActiveConnection).not.toHaveBeenCalled();
         expect(connectToDatabase).toHaveBeenCalledWith(mockNewConfig);
     });
 
@@ -146,7 +146,6 @@ describe("executeConnectCommand", () => {
             const url = "postgresql://user:pass@localhost:5432/mydb";
             await executeConnectCommand({ url });
 
-            // Should call testConnection with parsed config
             expect(testConnection).toHaveBeenCalledWith({
                 type: "postgresql",
                 host: "localhost",
@@ -221,7 +220,7 @@ describe("executeConnectCommand", () => {
             expect(testConnection).toHaveBeenCalledWith({
                 type: "postgresql",
                 host: "localhost",
-                port: 5432, // Should default to 5432 for PostgreSQL
+                port: 5432,
                 user: "user",
                 database: "mydb",
                 ssl: false,
@@ -272,7 +271,7 @@ describe("executeConnectCommand", () => {
         it("should use default name for SQLite URL connection", async () => {
             const url = "sqlite:///data/app.db";
             confirm.mockResolvedValue(true);
-            input.mockResolvedValue(""); // User presses Enter for default
+            input.mockResolvedValue("");
 
             await executeConnectCommand({ url });
 
@@ -296,7 +295,7 @@ describe("executeConnectCommand", () => {
 
             expect(addConnection).not.toHaveBeenCalled();
             expect(setActiveConnection).not.toHaveBeenCalled();
-            expect(connectToDatabase).toHaveBeenCalled(); // But should still connect
+            expect(connectToDatabase).toHaveBeenCalled();
         });
     });
 
@@ -311,7 +310,7 @@ describe("executeConnectCommand", () => {
             });
 
             expect(testConnection).toHaveBeenCalledWith({
-                type: "postgresql", // Should default to postgresql
+                type: "postgresql",
                 host: "myhost",
                 port: 5433,
                 user: "myuser",
@@ -342,10 +341,10 @@ describe("executeConnectCommand", () => {
 
             expect(testConnection).toHaveBeenCalledWith({
                 type: "postgresql",
-                host: "localhost", // Should default
-                port: 5432, // Should default
+                host: "localhost",
+                port: 5432,
                 user: "myuser",
-                ssl: false, // Should default
+                ssl: false,
             });
         });
     });

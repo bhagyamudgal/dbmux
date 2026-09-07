@@ -54,7 +54,7 @@ describe("executeAddCommand", () => {
     });
 
     it("should add a new connection with the default name", async () => {
-        input.mockResolvedValue(""); // User presses enter
+        input.mockResolvedValue("");
         await executeAddCommand();
 
         const expectedDefaultName = "test@localhost/testdb";

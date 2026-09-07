@@ -69,7 +69,6 @@ export async function executeRestoreCommand(
 
         logger.info("Starting database restore process...");
 
-        // Validate and resolve file path
         if (options.file) {
             const resolved = resolveDumpFilePath(options.file);
             if (!resolved) {
@@ -81,7 +80,6 @@ export async function executeRestoreCommand(
             options.file = resolved;
         }
 
-        // Get connection config
         let connection;
         try {
             connection = getConnection(options.connection);
@@ -101,10 +99,8 @@ export async function executeRestoreCommand(
             return;
         }
 
-        // Connect to database for operations
         await connectToDatabase(connection);
 
-        // Select dump file to restore
         let dumpFile: string;
         let selectedHistoryEntry: DumpHistoryEntry | undefined;
 
@@ -175,7 +171,6 @@ export async function executeRestoreCommand(
             });
         }
 
-        // Verify dump file
         logger.info("Verifying dump file...");
         let isCustomFormat: boolean;
         try {
@@ -186,7 +181,6 @@ export async function executeRestoreCommand(
             return;
         }
 
-        // Select restore target
         let targetDatabase: string;
         let createDatabase = false;
         let dropExisting = false;
@@ -198,7 +192,6 @@ export async function executeRestoreCommand(
             } else if (options.drop) {
                 dropExisting = true;
             } else {
-                // Ask what to do
                 const action = await select({
                     message: `Database '${targetDatabase}' - what should we do?`,
                     choices: [
@@ -238,7 +231,6 @@ export async function executeRestoreCommand(
             });
 
             if (restoreAction === "existing") {
-                // Get available databases (cached for performance)
                 logger.info("Fetching available databases...");
                 const databases = await getDatabases();
 
@@ -258,7 +250,6 @@ export async function executeRestoreCommand(
                     })),
                 });
 
-                // Confirm dangerous operation
                 const confirmed = await confirm({
                     message: `⚠️  DANGER: This will DELETE all data in '${targetDatabase}' and replace it. Continue?`,
                     default: false,
@@ -271,7 +262,6 @@ export async function executeRestoreCommand(
 
                 dropExisting = true;
             } else {
-                // Create new database
                 targetDatabase = await input({
                     message: "Enter name for new database:",
                     validate: (value: string) => {
@@ -289,7 +279,6 @@ export async function executeRestoreCommand(
             }
         }
 
-        // Final confirmation
         const action = createDatabase
             ? "create new"
             : dropExisting
@@ -305,7 +294,6 @@ export async function executeRestoreCommand(
             return;
         }
 
-        // Get connection name for history tracking
         const config = loadConfig();
         const activeConnectionName = getActiveConnection();
         const connectionName =
@@ -314,7 +302,6 @@ export async function executeRestoreCommand(
             config.defaultConnection ??
             "unknown";
 
-        // Perform restore
         try {
             await restoreDatabase(connection, {
                 inputFile: dumpFile,
@@ -360,7 +347,6 @@ export async function executeRestoreCommand(
         logger.fail(
             `Restore failed: ${extractMessageFromError(error, "Unknown error")}`
         );
-        // see dump.ts: process.exit() would skip the finally below.
         process.exitCode = 1;
     } finally {
         await closeConnection();

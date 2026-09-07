@@ -122,8 +122,6 @@ export async function executeDbDeleteCommand(
         try {
             await driver.connect(connection);
         } catch (error) {
-            // see connectToDatabase: a driver that fails partway through
-            // connect() still holds the pool it opened.
             await driver.disconnect().catch(() => {});
             throw error;
         }

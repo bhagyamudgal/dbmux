@@ -101,7 +101,7 @@ describe("executeDumpCommand", () => {
     it("should fail if pg_dump is not found", async () => {
         ensureCommandsExist.mockReturnValue(false);
         await executeDumpCommand({});
-        expect(logger.fail).not.toHaveBeenCalled(); // The util handles logging
+        expect(logger.fail).not.toHaveBeenCalled();
     });
 
     it("should fail for non-postgresql connections", async () => {
@@ -128,7 +128,7 @@ describe("executeDumpCommand", () => {
 
     it("should run interactively to select a database", async () => {
         select.mockResolvedValue("db2");
-        input.mockResolvedValue(""); // use default filename
+        input.mockResolvedValue("");
         await executeDumpCommand({});
         expect(select).toHaveBeenCalledOnce();
         expect(createDatabaseDump).toHaveBeenCalledWith(
@@ -169,7 +169,7 @@ describe("executeDumpCommand", () => {
 
     it("should use a custom filename when provided interactively", async () => {
         select.mockResolvedValue("db1");
-        input.mockResolvedValue("my_special_dump.sql"); // Custom filename
+        input.mockResolvedValue("my_special_dump.sql");
         await executeDumpCommand({});
         expect(createDatabaseDump).toHaveBeenCalledWith(
             mockConnection,

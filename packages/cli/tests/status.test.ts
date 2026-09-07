@@ -74,9 +74,9 @@ describe("executeStatusCommand", () => {
     it("should show an error if the connection details are not found", () => {
         loadConfig.mockReturnValue({
             ...mockConfig,
-            connections: {}, // No connections in config
+            connections: {},
         });
-        getActiveConnection.mockReturnValue("active"); // But an active one is set
+        getActiveConnection.mockReturnValue("active");
         executeStatusCommand();
         expect(logger.fail).toHaveBeenCalledWith(
             "Connection 'active' not found in config file."

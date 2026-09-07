@@ -102,10 +102,8 @@ describe("executeManageCommand", () => {
 
         await executeManageCommand();
         expect(logger.info).toHaveBeenCalledWith("Exiting connection manager.");
-        // Ensure no action commands were called
         expect(executeListCommand).not.toHaveBeenCalled();
         expect(executeAddCommand).not.toHaveBeenCalled();
-        // Check that the "continue" prompt was not shown
         expect(select).toHaveBeenCalledOnce();
     });
 });

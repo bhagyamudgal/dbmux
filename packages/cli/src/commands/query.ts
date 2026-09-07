@@ -114,10 +114,8 @@ function printCsv(result: QueryResult) {
     const { fields, rows } = result;
     const csvRows: string[] = [];
 
-    // Header
     csvRows.push(fields.join(","));
 
-    // Data rows
     for (const row of rows) {
         csvRows.push(
             fields

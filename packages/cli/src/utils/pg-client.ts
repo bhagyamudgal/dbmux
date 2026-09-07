@@ -15,8 +15,6 @@ export type PgClientResolution = {
     serverMajorVersion: number | null;
 };
 
-// `pg_restore --version` prints "pg_restore (PostgreSQL) 17.10"; pre-release
-// builds print "18beta1", so read digits after the parenthesised product name.
 const TOOL_VERSION_PATTERN = /\)\s+(\d+)/;
 
 const SERVER_VERSION_DIVISOR = 10000;
@@ -82,13 +80,7 @@ function findVersionMatchedBinary(
     return null;
 }
 
-/**
- * Picks the `pg_dump`/`pg_restore` binary whose major version matches the
- * connected server, falling back to the one on PATH when there is no match.
- *
- * Requires an active connection (see `connectToDatabase`) to read the server
- * version.
- */
+/** Picks the `pg_dump`/`pg_restore` binary whose major version matches the connected server, falling back to the one on PATH when there is no match. */
 export async function resolvePgClient(
     tool: PgClientTool
 ): Promise<PgClientResolution> {

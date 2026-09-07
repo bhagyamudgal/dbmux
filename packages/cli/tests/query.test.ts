@@ -11,7 +11,6 @@ import {
 import { executeQueryCommand } from "../src/commands/query";
 import type { QueryResult } from "@dbmux/types/database";
 
-// Mocks
 const { withDatabaseConnection } = vi.hoisted(() => ({
     withDatabaseConnection: vi.fn(async (_connection, callback, _database) => {
         return await callback();
@@ -26,7 +25,7 @@ const { logger } = vi.hoisted(() => ({
         fail: vi.fn(),
         success: vi.fn(),
         raw: vi.fn(),
-        table: vi.fn(), // Added table mock
+        table: vi.fn(),
     },
 }));
 

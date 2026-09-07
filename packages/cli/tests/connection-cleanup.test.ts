@@ -9,9 +9,6 @@ import {
     type Mock,
 } from "vitest";
 
-// The factory is the seam because these tests are about which commands close
-// what, not about pg itself; faking it keeps the pg client out of the graph so
-// nothing here can open a socket. PostgresDriver has its own suite.
 const {
     buildDriver,
     createDriver,
@@ -164,9 +161,6 @@ let originalExitCode: typeof process.exitCode;
 beforeAll(async () => {
     originalExitCode = process.exitCode;
 
-    // tests/setup.ts imports src/utils/database eagerly, which evaluates the
-    // real driver factory before any test file registers its mocks. Without
-    // this reset the commands keep that cached factory and open real sockets.
     vi.resetModules();
 
     const fs = await import("fs");
@@ -179,9 +173,6 @@ beforeAll(async () => {
     ({ withDatabaseConnection } = await import("../src/utils/command-runner"));
 });
 
-// `driverCount` guards the assertion itself: when the factory mock stops
-// applying, no fake driver is built and `openDrivers()` passes vacuously while
-// the real driver opens sockets.
 function expectEverythingClosed(): void {
     expect(driverCount()).toBeGreaterThan(0);
     expect(openDrivers()).toEqual([]);
@@ -194,8 +185,6 @@ describe("connection cleanup", () => {
         vi.resetAllMocks();
         resetDrivers();
 
-        // The commands under test set process.exitCode on failure, which would
-        // otherwise leak out and fail the vitest run itself.
         process.exitCode = undefined;
 
         processExit = vi
@@ -447,8 +436,6 @@ describe("connection cleanup", () => {
                 const driver = buildDriver();
                 return {
                     ...driver,
-                    // The pool is live once connect() opens it; only the
-                    // validation query that follows fails.
                     connect: async () => {
                         await driver.connect();
                         throw new Error("SELECT 1 failed");
@@ -458,8 +445,6 @@ describe("connection cleanup", () => {
 
             await withDatabaseConnection("dummy", async () => {});
 
-            // connectToDatabase never stores a driver that threw, so closing it
-            // there is the only chance to end the pool it already opened.
             expect(process.exitCode).toBe(1);
             expect(driverCount()).toBe(1);
             expect(openDrivers()).toEqual([]);

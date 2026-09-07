@@ -62,16 +62,10 @@ function stubSpawn(exitCode: number, stderrOutput = ""): void {
                 }
             ),
         };
-        // Only the three members the command runners touch are stubbed; the
-        // real ChildProcess surface is far too large to construct here.
         return childProcess as unknown as ReturnType<typeof spawn>;
     });
 }
 
-// Node 24 emits "error" then "close" with code -2 and no stderr for a failed
-// spawn, so a runner that reads only "close" reports an empty reason. Emission
-// is sequenced here rather than at registration, because the runner subscribes
-// to "close" first and the order is what decides which reason the caller gets.
 function stubSpawnFailure(errorMessage: string): void {
     vi.mocked(spawn).mockImplementation(() => {
         const handlers = new Map<string, (payload: never) => void>();

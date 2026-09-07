@@ -10,7 +10,6 @@ import {
 } from "vitest";
 import { executeRestoreCommand } from "../src/commands/restore";
 
-// Hoisted Mocks
 const { ensureCommandsExist } = vi.hoisted(() => ({
     ensureCommandsExist: vi.fn(),
 }));
@@ -50,7 +49,6 @@ const { logger } = vi.hoisted(() => ({
     },
 }));
 
-// Module Mocks
 vi.mock("fs");
 vi.mock("../src/utils/command-check.js", () => ({ ensureCommandsExist }));
 vi.mock("../src/utils/config.js", () => ({
@@ -127,11 +125,9 @@ describe("executeRestoreCommand", () => {
     });
 
     it("should restore to a new database interactively", async () => {
-        select
-            .mockResolvedValueOnce("test.dump") // select file
-            .mockResolvedValueOnce("new"); // select action
-        input.mockResolvedValue("new_db"); // enter db name
-        confirm.mockResolvedValue(true); // final confirm
+        select.mockResolvedValueOnce("test.dump").mockResolvedValueOnce("new");
+        input.mockResolvedValue("new_db");
+        confirm.mockResolvedValue(true);
 
         await executeRestoreCommand({});
 
@@ -149,10 +145,10 @@ describe("executeRestoreCommand", () => {
 
     it("should restore to an existing database with drop confirmation", async () => {
         select
-            .mockResolvedValueOnce("test.dump") // select file
-            .mockResolvedValueOnce("existing") // select action
-            .mockResolvedValueOnce("db1"); // select db
-        confirm.mockResolvedValue(true); // confirm dangerous op and final confirm
+            .mockResolvedValueOnce("test.dump")
+            .mockResolvedValueOnce("existing")
+            .mockResolvedValueOnce("db1");
+        confirm.mockResolvedValue(true);
 
         await executeRestoreCommand({});
 
@@ -177,7 +173,7 @@ describe("executeRestoreCommand", () => {
             .mockResolvedValueOnce("test.dump")
             .mockResolvedValueOnce("existing")
             .mockResolvedValueOnce("db1");
-        confirm.mockResolvedValueOnce(false); // REJECT dangerous op
+        confirm.mockResolvedValueOnce(false);
 
         await executeRestoreCommand({});
         expect(logger.info).toHaveBeenCalledWith("Restore operation cancelled");
@@ -213,7 +209,7 @@ describe("executeRestoreCommand", () => {
     });
 
     it("should cancel if user rejects final confirmation", async () => {
-        confirm.mockResolvedValue(false); // Reject final confirmation
+        confirm.mockResolvedValue(false);
         await executeRestoreCommand({
             file: "test.dump",
             database: "db1",

@@ -20,8 +20,6 @@ export async function connectToDatabase(config: ConnectionConfig) {
     try {
         await driver.connect(config);
     } catch (error) {
-        // A driver that fails partway through connect() is never stored, so
-        // closeConnection() cannot reach the pool it already opened.
         await driver.disconnect().catch((cleanupError) => {
             logger.warn(
                 `Connection cleanup failed while connecting: ${extractMessageFromError(cleanupError, "unknown error")}`
@@ -45,8 +43,6 @@ export async function closeConnection() {
         await currentDriver.disconnect();
         logger.info("Database connection closed.");
     } catch (error) {
-        // Every caller closes from a finally, where a throw would replace the
-        // command's real outcome with a cleanup failure.
         logger.warn(
             `Connection cleanup failed, the command itself completed: ${extractMessageFromError(error, "unknown error")}`
         );
