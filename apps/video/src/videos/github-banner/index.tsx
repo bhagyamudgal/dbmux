@@ -65,7 +65,6 @@ export function GitHubBanner() {
                 overflow: "hidden",
             }}
         >
-            {/* Subtle grid */}
             <AbsoluteFill
                 style={{
                     backgroundImage: `linear-gradient(to right, ${colors.mutedSubtle}15 1px, transparent 1px), linear-gradient(to bottom, ${colors.mutedSubtle}15 1px, transparent 1px)`,
@@ -78,7 +77,6 @@ export function GitHubBanner() {
                 }}
             />
 
-            {/* Scanline sweep */}
             {frame < 45 && (
                 <div
                     style={{
@@ -93,7 +91,6 @@ export function GitHubBanner() {
                 />
             )}
 
-            {/* Green accent line at top */}
             <div
                 style={{
                     position: "absolute",
@@ -116,7 +113,6 @@ export function GitHubBanner() {
                     padding: "0 100px",
                 }}
             >
-                {/* Left: Logo + tagline */}
                 <div
                     style={{
                         display: "flex",
@@ -172,7 +168,6 @@ export function GitHubBanner() {
                     </div>
                 </div>
 
-                {/* Right: Feature tags */}
                 <div
                     style={{
                         display: "flex",
@@ -231,7 +226,6 @@ export function GitHubBanner() {
                 </div>
             </AbsoluteFill>
 
-            {/* Bottom accent line */}
             <div
                 style={{
                     position: "absolute",
