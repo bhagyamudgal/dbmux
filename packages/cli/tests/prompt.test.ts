@@ -35,7 +35,7 @@ describe("promptForConnectionDetails", () => {
 
     describe("Connection method selection", () => {
         it("should offer choice between URL and individual fields", async () => {
-            select.mockResolvedValueOnce("url"); // Connection method
+            select.mockResolvedValueOnce("url");
             input.mockResolvedValue("postgresql://user:pass@localhost/db");
 
             await promptForConnectionDetails();
@@ -58,7 +58,7 @@ describe("promptForConnectionDetails", () => {
 
     describe("URL connection method", () => {
         beforeEach(() => {
-            select.mockResolvedValueOnce("url"); // Choose URL method
+            select.mockResolvedValueOnce("url");
         });
 
         it("should parse a complete PostgreSQL URL", async () => {
@@ -93,10 +93,10 @@ describe("promptForConnectionDetails", () => {
             expect(result).toEqual({
                 type: "postgresql",
                 host: "localhost",
-                port: 5432, // Should use default
+                port: 5432,
                 user: "user",
                 database: "mydb",
-                ssl: false, // Should use default
+                ssl: false,
             });
         });
 
@@ -123,7 +123,7 @@ describe("promptForConnectionDetails", () => {
         });
 
         it("should use driver defaults for missing components", async () => {
-            const url = "postgresql://user@localhost/db"; // Valid URL with minimal info
+            const url = "postgresql://user@localhost/db";
             input.mockResolvedValue(url);
 
             const result = await promptForConnectionDetails();
@@ -131,10 +131,10 @@ describe("promptForConnectionDetails", () => {
             expect(result).toEqual({
                 type: "postgresql",
                 host: "localhost",
-                port: 5432, // From driver defaults
+                port: 5432,
                 user: "user",
                 database: "db",
-                ssl: false, // From driver defaults
+                ssl: false,
             });
         });
 
@@ -144,19 +144,14 @@ describe("promptForConnectionDetails", () => {
 
             await promptForConnectionDetails();
 
-            // Get the validate function that was passed to input
             const validateFn = input.mock.calls[0]?.[0]?.validate;
 
-            // Test valid URL
             expect(validateFn(url)).toBe(true);
 
-            // Test empty URL
             expect(validateFn("")).toBe("URL cannot be empty.");
 
-            // Test invalid URL
             expect(validateFn("invalid-url")).toContain("Invalid database URL");
 
-            // Test unsupported protocol
             expect(validateFn("mysql://user@host/db")).toContain(
                 "Unsupported database type"
             );
@@ -165,17 +160,17 @@ describe("promptForConnectionDetails", () => {
 
     describe("Individual fields connection method", () => {
         beforeEach(() => {
-            select.mockResolvedValueOnce("fields"); // Choose fields method
+            select.mockResolvedValueOnce("fields");
         });
 
         it("should prompt for PostgreSQL connection details", async () => {
-            select.mockResolvedValueOnce("postgresql"); // Database type
-            input.mockResolvedValueOnce("myhost"); // host
-            input.mockResolvedValueOnce("5433"); // port
-            input.mockResolvedValueOnce("myuser"); // user
-            password.mockResolvedValueOnce("mypass"); // password
-            input.mockResolvedValueOnce("mydb"); // database
-            confirm.mockResolvedValueOnce(true); // SSL
+            select.mockResolvedValueOnce("postgresql");
+            input.mockResolvedValueOnce("myhost");
+            input.mockResolvedValueOnce("5433");
+            input.mockResolvedValueOnce("myuser");
+            password.mockResolvedValueOnce("mypass");
+            input.mockResolvedValueOnce("mydb");
+            confirm.mockResolvedValueOnce(true);
 
             const result = await promptForConnectionDetails();
 
@@ -230,8 +225,8 @@ describe("promptForConnectionDetails", () => {
         });
 
         it("should prompt for SQLite connection details", async () => {
-            select.mockResolvedValueOnce("sqlite"); // Database type
-            input.mockResolvedValueOnce("/path/to/db.sqlite"); // File path
+            select.mockResolvedValueOnce("sqlite");
+            input.mockResolvedValueOnce("/path/to/db.sqlite");
 
             const result = await promptForConnectionDetails();
 
@@ -248,18 +243,16 @@ describe("promptForConnectionDetails", () => {
 
         it("should validate required fields", async () => {
             select.mockResolvedValueOnce("postgresql");
-            input.mockResolvedValueOnce("localhost"); // host
+            input.mockResolvedValueOnce("localhost");
 
             await promptForConnectionDetails();
 
-            // Check user validation
             const userCall = input.mock.calls.find(
                 (call) => call[0]?.message === "User:"
             );
             expect(userCall?.[0]?.validate?.("")).toBe("User cannot be empty.");
             expect(userCall?.[0]?.validate?.("validuser")).toBe(true);
 
-            // Check database validation
             const dbCall = input.mock.calls.find(
                 (call) => call[0]?.message === "Database:"
             );
@@ -293,12 +286,12 @@ describe("promptForConnectionDetails", () => {
             });
 
             select.mockResolvedValueOnce("postgresql");
-            input.mockResolvedValueOnce(""); // Use default host
-            input.mockResolvedValueOnce(""); // Use default port
+            input.mockResolvedValueOnce("");
+            input.mockResolvedValueOnce("");
             input.mockResolvedValueOnce("user");
-            password.mockResolvedValueOnce(""); // No password
+            password.mockResolvedValueOnce("");
             input.mockResolvedValueOnce("db");
-            confirm.mockResolvedValueOnce(false); // Override SSL default
+            confirm.mockResolvedValueOnce(false);
 
             await promptForConnectionDetails();
 

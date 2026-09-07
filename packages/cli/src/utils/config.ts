@@ -39,7 +39,6 @@ export function loadConfig(): DBmuxConfig {
         const configContent = readFileSync(CONFIG_FILE, "utf-8");
         const config = JSON.parse(configContent) as DBmuxConfig;
 
-        // Merge with defaults to ensure all fields exist
         return {
             ...DEFAULT_CONFIG,
             ...config,
@@ -79,7 +78,6 @@ export function addConnection(
     const config = loadConfig();
     config.connections[name] = connection;
 
-    // Set as default if it's the first connection
     if (!config.defaultConnection) {
         config.defaultConnection = name;
     }
@@ -97,7 +95,6 @@ export function removeConnection(name: string): void {
 
     delete config.connections[name];
 
-    // Update default if needed
     if (config.defaultConnection === name) {
         const remainingConnections = Object.keys(config.connections);
         if (remainingConnections.length > 0) {

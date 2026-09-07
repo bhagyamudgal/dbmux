@@ -40,8 +40,6 @@ export async function executeCommand(
     });
 }
 
-// Inherits stdio so `sudo` can reach the terminal for its password prompt; the piped
-// variant above would leave the user staring at a hung process.
 export async function executeCommandInteractive(
     command: string,
     args: string[]

@@ -1,7 +1,5 @@
 import packageJson from "../../package.json";
 
-// Read at build time, not runtime: `bun build --compile` serves the bundle from a
-// virtual filesystem at /$bunfs/root, where no package.json exists to read back.
 export const PACKAGE_NAME = packageJson.name;
 export const PACKAGE_VERSION = packageJson.version;
 export const PACKAGE_DESCRIPTION = packageJson.description;

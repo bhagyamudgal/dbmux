@@ -1,8 +1,6 @@
 import { fileURLToPath } from "url";
 import { PACKAGE_NAME } from "./package-info.js";
 
-// process.argv[0] is "bun" inside a compiled binary rather than the executable path,
-// so this virtual-filesystem marker is the only reliable signal that we are one.
 const BUN_COMPILED_BINARY_MARKER = "/$bunfs/root/";
 
 const BUN_GLOBAL_INSTALL_MARKER = "/.bun/install/global/";

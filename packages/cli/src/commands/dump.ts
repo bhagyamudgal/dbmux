@@ -32,7 +32,6 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
 
         logger.info("Starting database dump process...");
 
-        // Get connection config
         let connection;
         try {
             connection = getConnection(options.connection);
@@ -52,11 +51,9 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             return;
         }
 
-        // Test connection first
         logger.info("Testing database connection...");
         await connectToDatabase(connection);
 
-        // Get available databases
         logger.info("Fetching available databases...");
         const databases: DatabaseInfo[] = await getDatabases();
 
@@ -66,7 +63,6 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             return;
         }
 
-        // Select database to dump
         let selectedDatabase: string;
         if (options.database) {
             selectedDatabase = options.database;
@@ -89,7 +85,6 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             });
         }
 
-        // Get output filename (always adds timestamp and .dump extension)
         let outputFile: string;
         if (options.output) {
             outputFile = generateDumpFilename(selectedDatabase, options.output);
@@ -108,7 +103,6 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
                 : defaultName;
         }
 
-        // Confirm dump operation
         const shouldProceed = await confirm({
             message: `Create dump of '${selectedDatabase}' as '${outputFile}'?`,
             default: true,
@@ -119,7 +113,6 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             return;
         }
 
-        // Get connection name for history tracking
         const config = loadConfig();
         const activeConnectionName = getActiveConnection();
         const connectionName =
@@ -128,7 +121,6 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
             config.defaultConnection ??
             "unknown";
 
-        // Perform dump
         try {
             const dumpResult = await createDatabaseDump(connection, {
                 database: selectedDatabase,
@@ -167,7 +159,6 @@ export async function executeDumpCommand(options: DumpOptions): Promise<void> {
         }
     } catch (error) {
         logger.fail(`Dump failed: ${error}`);
-        // process.exit() would skip the finally below and strand the pool.
         process.exitCode = 1;
     } finally {
         await closeConnection();

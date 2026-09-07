@@ -3,9 +3,6 @@ import { GITHUB_REPOSITORY, PACKAGE_NAME } from "./package-info.js";
 const NPM_REGISTRY_URL = `https://registry.npmjs.org/${PACKAGE_NAME}/latest`;
 const GITHUB_LATEST_RELEASE_URL = `https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest`;
 
-// A registry that accepts the connection but never answers would otherwise hang the
-// update check forever. Only these small metadata reads are bounded; the release
-// download is not, because a slow link legitimately takes minutes for a 59 MB binary.
 const REQUEST_TIMEOUT_MS = 10_000;
 
 type VersionSource = "npm" | "github";
@@ -57,8 +54,6 @@ function isGitHubPayload(payload: unknown): payload is { tag_name: string } {
     );
 }
 
-// Each channel asks its own registry: release.yml tags the GitHub release before
-// npm publish runs, so the two genuinely disagree during a release window.
 export async function fetchLatestVersion(
     source: VersionSource
 ): Promise<string> {

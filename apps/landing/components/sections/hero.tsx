@@ -17,7 +17,7 @@ export function Hero() {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            /* clipboard not available */
+            setCopied(false);
         }
     }
 

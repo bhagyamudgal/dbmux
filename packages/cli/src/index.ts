@@ -9,7 +9,6 @@ import {
     PACKAGE_VERSION,
 } from "./utils/package-info.js";
 
-// Import commands
 import { executeConfigCommand } from "./commands/config.js";
 import { executeConnectCommand } from "./commands/connect.js";
 import { executeDbCommand } from "./commands/db.js";
@@ -24,7 +23,6 @@ import { executeRestoreCommand } from "./commands/restore.js";
 import { executeStatusCommand } from "./commands/status.js";
 import { executeUpdateCommand } from "./commands/update.js";
 
-// Define commands
 const connectCommand = command({
     name: "connect",
     desc: "Connect to a PostgreSQL database and save configuration",

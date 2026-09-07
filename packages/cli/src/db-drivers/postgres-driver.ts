@@ -31,9 +31,6 @@ export class PostgresDriver implements DatabaseDriver {
             connectionTimeoutMillis: 10000,
         });
 
-        // pg re-emits an idle client's error on the pool, and an unlistened
-        // "error" event is an uncaught exception. `db delete` terminates the
-        // backends of its own pools, so this fires on a delete that succeeded.
         this.pool.on("error", (error) => {
             logger.warn(`Database connection dropped: ${error.message}`);
         });
@@ -42,16 +39,11 @@ export class PostgresDriver implements DatabaseDriver {
         try {
             await client.query("SELECT 1");
         } finally {
-            // pool.end() waits for every checked-out client to come back, so a
-            // client left out here hangs the CLI indefinitely rather than for
-            // the 30s an idle client costs.
             client.release();
         }
     }
 
     private isValidUnquotedName(name: string): boolean {
-        // Accept any non-empty string up to 63 bytes without NUL characters
-        // This allows names like "my-db" returned by pg_database.datname
         return (
             name.length > 0 &&
             Buffer.byteLength(name, "utf8") <= 63 &&
@@ -122,8 +114,6 @@ export class PostgresDriver implements DatabaseDriver {
         try {
             await this.pool.end();
         } finally {
-            // Retaining a half-ended pool makes the next end() reject with
-            // "Called end on pool more than once".
             this.pool = null;
         }
     }
@@ -304,8 +294,6 @@ export class PostgresDriver implements DatabaseDriver {
         const adminClient = await this.createAdminClient();
 
         try {
-            // DROP DATABASE cannot use parameterized queries for the db name,
-            // but we've validated and properly escaped the identifier
             await adminClient.query(
                 `DROP DATABASE IF EXISTS ${formattedIdentifier}`
             );

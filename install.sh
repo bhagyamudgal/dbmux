@@ -1,19 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# dbmux Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/bhagyamudgal/dbmux/main/install.sh | bash
-
 REPO="bhagyamudgal/dbmux"
 INSTALL_DIR="${DBMUX_INSTALL_DIR:-/usr/local/bin}"
 BINARY_NAME="dbmux"
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 info() {
     echo -e "${BLUE}[INFO]${NC} $1" >&2
@@ -65,7 +61,6 @@ detect_platform() {
             ;;
     esac
 
-    # Windows and Linux only support x64 currently
     if [[ "$os" == "windows" || "$os" == "linux" ]] && [[ "$arch" != "x64" ]]; then
         error "Only x64 architecture is supported for $os"
     fi
@@ -105,7 +100,6 @@ download_binary() {
 
     tmp_dir=$(mktemp -d)
 
-    # Construct binary name based on platform
     case "$platform" in
         linux-x64)
             binary_name="dbmux-linux-x64"
@@ -167,12 +161,10 @@ install_binary() {
     local platform="$2"
     local target_path="${INSTALL_DIR}/${BINARY_NAME}"
 
-    # Add .exe extension on Windows
     if [[ "$platform" == windows-* ]]; then
         target_path="${target_path}.exe"
     fi
 
-    # Check if we need sudo
     if [[ -w "$INSTALL_DIR" ]]; then
         mv "$binary_path" "$target_path"
         chmod +x "$target_path"
@@ -239,7 +231,6 @@ main() {
     info "Installing to ${INSTALL_DIR}..."
     install_binary "$binary_path" "$platform"
 
-    # Cleanup
     rm -rf "$(dirname "$binary_path")"
 
     echo ""

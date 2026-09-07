@@ -18,7 +18,6 @@ const CHECKSUMS_FILE_NAME = "checksums.txt";
 const EXECUTABLE_MODE = 0o755;
 const BACKUP_SUFFIX = ".old";
 
-// Mirrors detect_platform() in install.sh and the build:* scripts in package.json.
 const ASSET_NAMES: Record<string, string> = {
     "linux-x64": "dbmux-linux-x64",
     "darwin-x64": "dbmux-darwin-x64",
@@ -136,8 +135,6 @@ async function installDownloadedBinary(
 ): Promise<void> {
     const backupPath = `${executablePath}${BACKUP_SUFFIX}`;
 
-    // Moving the current executable aside before moving the new one in is what makes
-    // this work on Windows, where a running .exe cannot be overwritten in place.
     await mover.move(executablePath, backupPath);
 
     try {
@@ -148,8 +145,6 @@ async function installDownloadedBinary(
         throw error;
     }
 
-    // Windows lets us rename a running image but not delete one, so the backup can
-    // outlive a successful update. The new binary is already in place either way.
     try {
         await mover.remove(backupPath);
     } catch {
@@ -165,9 +160,6 @@ export async function replaceBinary(
     const targetDirectory = dirname(executablePath);
     const isTargetWritable = await canWrite(targetDirectory);
 
-    // Staging inside the target directory keeps the final move on one filesystem, so
-    // rename() is atomic. Falling back to a temp dir gives that up, but an unwritable
-    // target needs a privileged move anyway.
     const stagingDirectory = isTargetWritable
         ? targetDirectory
         : await mkdtemp(join(tmpdir(), "dbmux-update-"));

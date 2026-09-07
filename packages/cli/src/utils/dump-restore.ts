@@ -111,7 +111,7 @@ function generateTimestamp(): string {
         .toISOString()
         .replace(/[:.]/g, "-")
         .replace("T", "_")
-        .slice(0, -5); // Remove milliseconds and Z
+        .slice(0, -5);
 }
 
 export function generateDumpFilename(
@@ -149,7 +149,6 @@ export async function executeCommandWithProgress(
             const output = data.toString();
             stdout += output;
             if (showProgress) {
-                // Show pg_restore progress output
                 process.stdout.write(output);
             }
         });
@@ -158,7 +157,6 @@ export async function executeCommandWithProgress(
             const error = data.toString();
             stderr += error;
             if (showProgress) {
-                // pg_restore sends progress info to stderr
                 process.stderr.write(error);
             }
         });
@@ -171,9 +169,6 @@ export async function executeCommandWithProgress(
             });
         });
 
-        // An unhandled "error" event is rethrown as an uncaught exception, and
-        // the "close" that follows a spawn failure carries no stderr — so the
-        // ENOENT only reaches the caller through this handler.
         childProcess.on("error", (error: Error) => {
             resolve({
                 success: false,
@@ -381,12 +376,9 @@ export async function restoreDatabase(
     logger.info(`Restoring database from '${options.inputFile}'`);
     logger.info(`Target database: ${options.targetDatabase}`);
 
-    // Resolved before the drop/create step so a version mismatch aborts while
-    // the target database is still intact.
     const pgRestore = await resolvePgClient("pg_restore");
     assertRestoreClientUsable(pgRestore);
 
-    // If we need to drop and recreate the database
     if (options.dropExisting) {
         await dropAndRecreateDatabase(connection, options.targetDatabase);
     } else if (options.createDatabase) {
@@ -406,10 +398,8 @@ export async function restoreDatabase(
         "--no-owner",
     ];
 
-    // Always enable verbose mode for progress feedback
     args.push("--verbose");
 
-    // Check if it's a custom format dump (use passed result if available)
     const isCustomFormat =
         options.isCustomFormat !== undefined
             ? options.isCustomFormat
@@ -434,9 +424,6 @@ export async function restoreDatabase(
         );
 
         if (!result.success) {
-            // The custom-format archive version is bumped by major releases, and
-            // pg_restore refuses archives newer than itself — so a dump taken
-            // with a newer pg_dump is unreadable by the version-matched client.
             if (result.error.includes("unsupported version")) {
                 logger.info(
                     `This dump was written by a newer pg_dump than PostgreSQL ${pgRestore.serverMajorVersion} can read. Re-create it with 'dbmux dump' against the target's version, or restore into a newer server.`
@@ -445,7 +432,6 @@ export async function restoreDatabase(
             throw new Error(`pg_restore failed: ${result.error}`);
         }
     } else {
-        // Plain SQL file - use psql
         const psqlArgs = [
             "--host",
             connection.host || "localhost",
@@ -488,15 +474,11 @@ export async function verifyDumpFile(filePath: string): Promise<boolean> {
 
         const fileExt = extname(filePath).toLowerCase();
 
-        // Fast path: Check if it's a plain SQL file first
         if (fileExt === ".sql") {
             logger.success("Dump file detected as plain SQL format");
-            return false; // false means it's not custom format (but still valid)
+            return false;
         }
 
-        // For other formats (.dump, .tar, .gz), try to list contents.
-        // Verifying with the same client the restore will use, since a client
-        // older than the archive rejects it outright.
         const pgRestore = await resolvePgClient("pg_restore");
         const result = await executeCommand(pgRestore.command, [
             "--list",
@@ -567,7 +549,6 @@ export async function dropAndRecreateDatabase(
         env.PGPASSWORD = connection.password;
     }
 
-    // First, terminate active connections
     logger.info("Terminating active connections...");
     const terminateArgs = [
         "--host",
@@ -584,7 +565,6 @@ export async function dropAndRecreateDatabase(
 
     await executeCommand("psql", terminateArgs, env);
 
-    // Drop the database (must be separate command)
     logger.info(`Dropping database '${databaseName}'...`);
     const dropArgs = [
         "--host",
@@ -607,7 +587,6 @@ export async function dropAndRecreateDatabase(
         );
     }
 
-    // Create the database (must be separate command)
     logger.info(`Creating database '${databaseName}'...`);
     await createDatabase(connection, databaseName);
 }

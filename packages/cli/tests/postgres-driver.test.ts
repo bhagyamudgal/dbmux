@@ -55,7 +55,6 @@ const DUMMY_CONNECTION = {
 let PostgresDriver: typeof import("../src/db-drivers/postgres-driver").PostgresDriver;
 
 beforeAll(async () => {
-    // see connection-cleanup.test.ts: tests/setup.ts pre-loads this graph.
     vi.resetModules();
     ({ PostgresDriver } = await import("../src/db-drivers/postgres-driver"));
 });
