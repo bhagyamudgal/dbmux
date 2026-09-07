@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
-// eslint-disable-next-line camelcase -- next/font exports use font family names with underscores
-import { IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
+import {
+    IBM_Plex_Sans as IBMPlexSans,
+    JetBrains_Mono as JetBrainsMono,
+} from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
-const ibmPlexSans = IBM_Plex_Sans({
+const ibmPlexSans = IBMPlexSans({
     subsets: ["latin"],
     variable: "--font-sans",
     weight: ["300", "400", "500", "600", "700"],
     display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const jetbrainsMono = JetBrainsMono({
     subsets: ["latin"],
     variable: "--font-mono",
     display: "swap",

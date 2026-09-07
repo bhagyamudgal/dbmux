@@ -175,5 +175,5 @@ See connection-cleanup.test.ts: tests/setup.ts pre-loads this graph.
 
 Matched from apps/landing dark mode: oklch with hue 250 (cool blue undertone).
 Per-color oklch source values were recorded on each line (e.g. background
-oklh(0.12 0.005 250), primary oklch(0.72 0.19 145)); the hex values in code
+oklch(0.12 0.005 250), primary oklch(0.72 0.19 145)); the hex values in code
 are derived from them.

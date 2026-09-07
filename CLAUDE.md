@@ -119,6 +119,14 @@ Global rules from `~/.claude/CLAUDE.md` apply. Additional project conventions:
 >   | grep -E '^\+([[:space:]]*#|.*[[:space:]]#)' | grep -vE "$CITED|^\+#!"
 > ```
 
+Project tightening on top of the block above, which stays verbatim. The net misses `{/* */}` where `{` touches `/*` with no space between, and it exempts one-line `/** */` without checking for `export`. Run both before reporting done:
+
+```bash
+git diff -U0 <base> -- '*.tsx' '*.jsx' | grep -E '^\+.*\{/\*'
+```
+
+Confirm every added `/** */` line sits directly above an `export` line.
+
 ## Special Considerations
 
 ### Security
