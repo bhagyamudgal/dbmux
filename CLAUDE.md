@@ -97,6 +97,28 @@ Global rules from `~/.claude/CLAUDE.md` apply. Additional project conventions:
 - Use `logger.fail()` for user-facing errors
 - Use `getConnection()` to resolve database config (handles session, default, and named connections)
 
+## Code comments
+
+> **No comments in code. Rename or restructure instead.** Two exceptions, and each must fit on one line:
+>
+> 1. A `/** */` docstring on an exported symbol, stating a contract the signature cannot show.
+> 2. A citation for a constraint the code cannot express: a URL, a spec section, an ADR or `docs/` path, or an issue number. The line carries the pointer, never the explanation.
+>
+> Everything else is banned. That includes any comment that explains what the code does, why it has its shape, what would break, or what you learned while writing it. Put that reasoning in the PR body, a test name, or an ADR.
+>
+> Existing comments in a file are not a style to match and not a license to add more. Leave them alone when you touch the file for another reason.
+>
+> Before reporting a code change done, print every added comment line that lacks a citation token and delete each comment it shows. The pattern is a net, not a parser: a printed line that is not a comment is a false positive to leave alone.
+>
+> ```bash
+> CITED='https?://|docs/|ADR|#[0-9]+|§'
+> git diff -U0 <base> -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.go' '*.rs' '*.java' '*.kt' '*.swift' '*.c' '*.h' '*.cpp' '*.cs' \
+>   | grep -E '^\+([[:space:]]*(//|/\*|\* )|.*[[:space:]](//|/\*))' \
+>   | grep -vE "$CITED|^\+[[:space:]]*/\*\*.*\*/[[:space:]]*\$"
+> git diff -U0 <base> -- '*.py' '*.sh' '*.zsh' '*.rb' '*.toml' '*.yml' '*.yaml' \
+>   | grep -E '^\+([[:space:]]*#|.*[[:space:]]#)' | grep -vE "$CITED|^\+#!"
+> ```
+
 ## Special Considerations
 
 ### Security
